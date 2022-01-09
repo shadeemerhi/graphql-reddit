@@ -1,21 +1,20 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@mikro-orm/core");
-const constants_1 = require("./constants");
 const Post_1 = require("./entities/Post");
+const mikro_orm_config_1 = __importDefault(require("./mikro-orm.config"));
 const main = async () => {
-    const orm = await core_1.MikroORM.init({
-        entities: [Post_1.Post],
-        dbName: "graphreddit",
-        user: "",
-        password: "",
-        debug: !constants_1.__prod__,
-        type: "postgresql",
-    });
+    const orm = await core_1.MikroORM.init(mikro_orm_config_1.default);
+    await orm.getMigrator().up();
     const post = orm.em.create(Post_1.Post, { title: "My First Post" });
     await orm.em.persistAndFlush(post);
+    const posts = await orm.em.find(Post_1.Post, {});
+    console.log('HERE ARE THE POSTS', posts);
 };
-main().catch(err => {
+main().catch((err) => {
     console.log(err);
 });
 //# sourceMappingURL=index.js.map
