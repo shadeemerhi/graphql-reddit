@@ -1,4 +1,5 @@
 import { Post } from "./entities/Post";
+import { User } from "./entities/User";
 import { __prod__ } from "./constants";
 
 import { MikroORM } from "@mikro-orm/core";
@@ -9,7 +10,7 @@ export default {
         path: path.join(__dirname, "./migrations"), // path to the folder with migrations
         pattern: /^[\w-]+\d+\.[tj]s$/,
     },
-    entities: [Post],
+    entities: [Post, User],
     user: 'shadeemerhi',
     dbName: "graphreddit",
     type: "postgresql",

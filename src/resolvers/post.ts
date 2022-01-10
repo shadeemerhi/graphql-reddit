@@ -51,7 +51,6 @@ export class PostResolver {
         @Arg("id") id: number,
         @Ctx() { em }: MyContext
     ): Promise<boolean> {
-
         // Could put try/catch in these areas
         await em.nativeDelete(Post, { id });
         return true;

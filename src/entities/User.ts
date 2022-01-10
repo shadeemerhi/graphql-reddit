@@ -1,10 +1,10 @@
 import { Entity, Property, PrimaryKey } from "@mikro-orm/core";
-import { Field, ObjectType } from "type-graphql";
+import { Field, Int, ObjectType } from "type-graphql";
 
 @ObjectType()
 @Entity()
-export class Post {
-    @Field()
+export class User {
+    @Field(() => Int)
     @PrimaryKey()
     id!: number;
 
@@ -17,6 +17,10 @@ export class Post {
     updatedAt: Date = new Date();
 
     @Field()
+    @Property({ type: "text", unique: true })
+    username!: string;
+
+    // @Field() - removing field property prevents frontend exposure
     @Property({ type: "text" })
-    title!: string;
+    password!: string;
 }
