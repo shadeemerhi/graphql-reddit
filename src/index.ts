@@ -11,7 +11,7 @@ import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types";
 
 import * as redis from 'redis';
-import session, { MemoryStore } from "express-session";
+import session from "express-session";
 import connectRedis from "connect-redis";
 
 // Not sure if below is best way
