@@ -94,10 +94,7 @@ export class UserResolver {
         try {
             await em.persistAndFlush(user);
         } catch (error) {
-            if (
-                error.code === "23505" ||
-                error.detail.includes("already exists")
-            ) {
+            if (error.detail.includes("already exists")) {
                 // throw new Error("Username has already been used"); // Why not just do this?
                 return {
                     errors: [
