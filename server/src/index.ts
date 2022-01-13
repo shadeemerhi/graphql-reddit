@@ -9,8 +9,9 @@ import { buildSchema } from "type-graphql";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types";
+import cors from "cors";
 
-import * as redis from 'redis';
+import * as redis from "redis";
 import session from "express-session";
 import connectRedis from "connect-redis";
 
@@ -28,6 +29,12 @@ const main = async () => {
 
     const RedisStore = connectRedis(session);
     const redisClient = redis.createClient();
+    app.use(
+        cors({
+            origin: "http://localhost:3000",
+            credentials: true,
+        })
+    );
 
     app.use(
         session({
@@ -55,7 +62,10 @@ const main = async () => {
 
     // Creates graphql endpoint
     await apolloServer.start();
-    apolloServer.applyMiddleware({ app });
+    apolloServer.applyMiddleware({
+        app,
+        cors: false, // setting cors globally using 'cors' middlewear rather than with Apollo here
+    });
 
     app.listen(4000, () => {
         console.log("Server Started on PORT 4000");

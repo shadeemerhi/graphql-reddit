@@ -31,6 +31,7 @@ const apollo_server_express_1 = require("apollo-server-express");
 const type_graphql_1 = require("type-graphql");
 const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
+const cors_1 = __importDefault(require("cors"));
 const redis = __importStar(require("redis"));
 const express_session_1 = __importDefault(require("express-session"));
 const connect_redis_1 = __importDefault(require("connect-redis"));
@@ -40,6 +41,10 @@ const main = async () => {
     const app = (0, express_1.default)();
     const RedisStore = (0, connect_redis_1.default)(express_session_1.default);
     const redisClient = redis.createClient();
+    app.use((0, cors_1.default)({
+        origin: "http://localhost:3000",
+        credentials: true,
+    }));
     app.use((0, express_session_1.default)({
         name: "qid",
         store: new RedisStore({ client: redisClient, disableTouch: true }),
@@ -61,7 +66,10 @@ const main = async () => {
         context: ({ req, res }) => ({ em: orm.em, req, res }),
     });
     await apolloServer.start();
-    apolloServer.applyMiddleware({ app });
+    apolloServer.applyMiddleware({
+        app,
+        cors: false,
+    });
     app.listen(4000, () => {
         console.log("Server Started on PORT 4000");
     });
