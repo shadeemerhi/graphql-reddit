@@ -10,19 +10,6 @@ import { useRouter } from "next/router";
 
 interface RegisterProps {}
 
-const REGISTER_MUTATION = `mutation Register($username: String!, $password: String!) {
-  register(options: {username: $username, password: $password}) {
-    errors {
-      field
-      message
-    }
-    user {
-      id
-      username
-    }
-  }
-}`;
-
 const Register: React.FC<RegisterProps> = ({}) => {
     const router = useRouter();
     const [{ data, fetching, error }, register] = useRegisterMutation();

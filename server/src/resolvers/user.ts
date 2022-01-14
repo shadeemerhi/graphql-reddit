@@ -158,6 +158,8 @@ export class UserResolver {
         }
 
         req.session.userId = user.id;
+        console.log('HERE IS SESSION', req.session);
+        
 
         return {
             user,
