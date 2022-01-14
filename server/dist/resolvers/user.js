@@ -17,7 +17,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserResolver = void 0;
 const argon2_1 = __importDefault(require("argon2"));
-const validateRegister_1 = require("src/utils/validateRegister");
+const validateRegister_1 = require("../utils/validateRegister");
 const type_graphql_1 = require("type-graphql");
 const constants_1 = require("../constants");
 const User_1 = require("../entities/User");
@@ -109,8 +109,8 @@ let UserResolver = class UserResolver {
             return {
                 errors: [
                     {
-                        field: "username",
-                        message: "Username does not exist",
+                        field: "usernameOrEmail",
+                        message: "Username or email does not exist",
                     },
                 ],
             };

@@ -1,7 +1,7 @@
 import { EntityManager } from "@mikro-orm/postgresql";
 import argon2 from "argon2";
 import { MyContext } from "src/types";
-import { validateRegister } from "src/utils/validateRegister";
+import { validateRegister } from "../utils/validateRegister";
 import {
     Arg,
     Ctx,
@@ -125,8 +125,8 @@ export class UserResolver {
             return {
                 errors: [
                     {
-                        field: "username",
-                        message: "Username does not exist",
+                        field: "usernameOrEmail",
+                        message: "Username or email does not exist",
                     },
                 ],
             };
