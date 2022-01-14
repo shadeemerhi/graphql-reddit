@@ -13,6 +13,7 @@ import {
     Resolver,
 } from "type-graphql";
 import { EntityManager } from "@mikro-orm/postgresql";
+import { COOKIE_NAME } from "../constants";
 
 @InputType()
 class UsernamePasswordInput {
@@ -88,9 +89,8 @@ export class UserResolver {
         }
         const hashedPassword = await argon2.hash(options.password);
         let user;
-        
-        try {
 
+        try {
             // Using the custom query builder over MikroORM - typical when running into errors with an ORM
             const result = await (em as EntityManager)
                 .createQueryBuilder(User)
@@ -158,11 +158,26 @@ export class UserResolver {
         }
 
         req.session.userId = user.id;
-        console.log('HERE IS SESSION', req.session);
-        
+        console.log("HERE IS SESSION", req.session);
 
         return {
             user,
         };
+    }
+
+    @Mutation(() => Boolean, { nullable: true })
+    async logout(@Ctx() { req, res }: MyContext) {
+        // You are not logged in
+        return new Promise((resolve) =>
+            req.session.destroy((err) => {
+                res.clearCookie(COOKIE_NAME);
+                if (err) {
+                    console.log(err);
+                    resolve(false);
+                    return;
+                }
+                resolve(true);
+            })
+        );
     }
 }
