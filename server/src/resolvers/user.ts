@@ -11,9 +11,11 @@ import {
     Query,
     Resolver,
 } from "type-graphql";
-import { COOKIE_NAME } from "../constants";
+import { COOKIE_NAME, FORGOT_PASSWORD_PREFIX } from "../constants";
 import { User } from "../entities/User";
 import { UsernamePasswordInput } from "./UsernamePasswordInput";
+import { sendEmail } from "../utils/sendEmail";
+import { v4 } from "uuid";
 
 @ObjectType()
 class UserResponse {
@@ -35,12 +37,84 @@ class FieldError {
 
 @Resolver()
 export class UserResolver {
+    @Mutation(() => UserResponse)
+    async changePassword(
+        @Arg("token") token: string,
+        @Arg("newPassword") newPassword: string,
+        @Ctx() { req, em, redis }: MyContext
+    ): Promise<UserResponse> {
+        if (newPassword.length <= 2) {
+            return {
+                errors: [
+                    {
+                        field: "newPassword",
+                        message: "Password must be at least 2 characters",
+                    },
+                ],
+            };
+        }
+
+        // Check token
+        const userId = await redis.get(FORGOT_PASSWORD_PREFIX + token);
+        if (!userId) {
+            return {
+                errors: [
+                    {
+                        field: "token",
+                        message: "Token expired",
+                    },
+                ],
+            };
+        }
+
+        const user = await em.findOne(User, { id: parseInt(userId) });
+
+        // This should basically never happen at this step, but just in case!
+        if (!user) {
+            return {
+                errors: [
+                    {
+                        field: "token",
+                        message: "User no longer exists",
+                    },
+                ],
+            };
+        }
+
+        user.password = await argon2.hash(newPassword);
+        await em.persistAndFlush(user);
+
+        // login after changing password
+        req.session.userId = user.id;
+
+        return {
+            user,
+        };
+    }
+
     @Mutation(() => Boolean)
-    async forgotPassowrd(
+    async forgotPassword(
         @Arg("email") email: string,
-        @Ctx() { em }: MyContext
+        @Ctx() { em, redis }: MyContext
     ) {
-        const person = await em.findOne(User, { email });
+        const user = await em.findOne(User, { email });
+        if (!user) {
+            // email is not in the database
+            return true; // could handle this in various ways
+        }
+
+        const token = v4();
+
+        await redis.set(
+            FORGOT_PASSWORD_PREFIX + token,
+            user.id,
+            "ex",
+            1000 * 60 * 60 * 24 * 3
+        ); // 3 days
+        await sendEmail(
+            email,
+            `<a href="http:localhost:3000/change-password/${token}">Reset Password</a>`
+        );
         return true;
     }
 
@@ -88,7 +162,6 @@ export class UserResolver {
             user = result[0];
         } catch (error) {
             if (error.detail.includes("already exists")) {
-                // throw new Error("Username has already been used"); // Why not just do this?
                 return {
                     errors: [
                         {
