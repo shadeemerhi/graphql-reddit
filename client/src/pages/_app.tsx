@@ -9,6 +9,7 @@ import {
 import theme from "../theme";
 import {
     LoginMutation,
+    LogoutMutation,
     MeDocument,
     MeQuery,
     RegisterMutation,
@@ -68,6 +69,16 @@ const client = createClient({
                                     };
                                 }
                             }
+                        );
+                    },
+                    logout: (_result, args, cache, info) => {
+                        betterUpdateQuery<LogoutMutation, MeQuery>(
+                            cache,
+                            {
+                                query: MeDocument,
+                            },
+                            _result,
+                            () => ({ me: null })
                         );
                     },
                 },
