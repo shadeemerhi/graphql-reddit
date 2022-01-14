@@ -3,7 +3,6 @@ import { Formik, Form } from "formik";
 import InputField from "../components/InputField";
 import Wrapper from "../components/Wrapper";
 
-import { useMutation } from "urql";
 import { useRegisterMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/router";
