@@ -1,4 +1,4 @@
-import { Box, Button } from "@chakra-ui/react";
+import { Box, Button, Link } from "@chakra-ui/react";
 import { Formik, Form } from "formik";
 import InputField from "../components/InputField";
 import Wrapper from "../components/Wrapper";
@@ -9,6 +9,7 @@ import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/router";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import { withUrqlClient } from "next-urql";
+import NextLink from "next/link";
 
 interface LoginProps {}
 
@@ -19,7 +20,7 @@ const Login: React.FC<LoginProps> = ({}) => {
     return (
         <Wrapper>
             <Formik
-            initialValues={{ usernameOrEmail: '', password: '' }}
+                initialValues={{ usernameOrEmail: "", password: "" }}
                 onSubmit={async (values, { setErrors }) => {
                     console.log(values);
                     const response = await login(values);
@@ -55,6 +56,11 @@ const Login: React.FC<LoginProps> = ({}) => {
                         >
                             Login
                         </Button>
+                        <Box mt={4}>
+                            <NextLink href='/forgot-password'>
+                                <Link>Forgot Password?</Link>
+                            </NextLink>
+                        </Box>
                     </Form>
                 )}
             </Formik>
