@@ -1,4 +1,4 @@
-import { MikroORM } from "@mikro-orm/core";
+import "reflect-metadata";
 import { ApolloServer } from "apollo-server-express";
 import connectRedis from "connect-redis";
 import cors from "cors";
@@ -6,7 +6,6 @@ import express from "express";
 import session from "express-session";
 import Redis from "ioredis";
 // import * as redis from "redis";
-import "reflect-metadata";
 import { buildSchema } from "type-graphql";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import mikroConfig from "./mikro-orm.config";
@@ -14,6 +13,8 @@ import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types";
 import { createConnection } from "typeorm";
+import { Post } from "./entities/Post";
+import { User } from "./entities/User";
 
 // Not sure if below is best way
 declare module "express-session" {
@@ -33,8 +34,10 @@ const main = async () => {
         password: "postgres",
         logging: true,
         synchronize: true, // don't need to run migrations
-        entities: [],
+        entities: [Post, User],
     });
+
+
     const app = express();
 
     const RedisStore = connectRedis(session);
@@ -67,7 +70,7 @@ const main = async () => {
             resolvers: [UserResolver, PostResolver],
             validate: false,
         }),
-        context: ({ req, res }): MyContext => ({ em: orm.em, req, res, redis }),
+        context: ({ req, res }): MyContext => ({ req, res, redis }),
     });
 
     // Creates graphql endpoint
