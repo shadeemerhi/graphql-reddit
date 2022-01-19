@@ -96,7 +96,7 @@ let UserResolver = class UserResolver {
     async forgotPassword(email, { em, redis }) {
         const user = await em.findOne(User_1.User, { email });
         if (!user) {
-            return true;
+            return false;
         }
         const token = (0, uuid_1.v4)();
         await redis.set(constants_1.FORGOT_PASSWORD_PREFIX + token, user.id, "ex", 1000 * 60 * 60 * 24 * 3);

@@ -104,7 +104,7 @@ export class UserResolver {
         const user = await em.findOne(User, { email });
         if (!user) {
             // email is not in the database
-            return true; // could handle this in various ways
+            return false;
         }
 
         const token = v4();
