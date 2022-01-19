@@ -8,7 +8,6 @@ import Redis from "ioredis";
 // import * as redis from "redis";
 import { buildSchema } from "type-graphql";
 import { COOKIE_NAME, __prod__ } from "./constants";
-import mikroConfig from "./mikro-orm.config";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types";
@@ -24,11 +23,6 @@ declare module "express-session" {
 }
 
 const main = async () => {
-    console.log('SMOKE MEEEEE');
-    
-    // const orm = await MikroORM.init(mikroConfig);
-    // await orm.getMigrator().up();
-
     try {
         const conn = await createConnection({
             type: 'postgres',
