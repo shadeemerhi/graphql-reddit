@@ -4,7 +4,7 @@ import connectRedis from "connect-redis";
 import cors from "cors";
 import express from "express";
 import session from "express-session";
-import Redis from 'ioredis';
+import Redis from "ioredis";
 // import * as redis from "redis";
 import "reflect-metadata";
 import { buildSchema } from "type-graphql";
@@ -13,7 +13,7 @@ import mikroConfig from "./mikro-orm.config";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types";
-
+import { createConnection } from "typeorm";
 
 // Not sure if below is best way
 declare module "express-session" {
@@ -23,8 +23,18 @@ declare module "express-session" {
 }
 
 const main = async () => {
-    const orm = await MikroORM.init(mikroConfig);
+    // const orm = await MikroORM.init(mikroConfig);
     // await orm.getMigrator().up();
+
+    const conn = await createConnection({
+        type: "postgres",
+        database: "graphreddit2",
+        username: "postgres",
+        password: "postgres",
+        logging: true,
+        synchronize: true, // don't need to run migrations
+        entities: [],
+    });
     const app = express();
 
     const RedisStore = connectRedis(session);
