@@ -55,7 +55,8 @@ export class UserResolver {
         }
 
         // Check token
-        const userId = await redis.get(FORGOT_PASSWORD_PREFIX + token);
+        const key = FORGOT_PASSWORD_PREFIX + token;
+        const userId = await redis.get(key);
         if (!userId) {
             return {
                 errors: [
@@ -83,6 +84,9 @@ export class UserResolver {
 
         user.password = await argon2.hash(newPassword);
         await em.persistAndFlush(user);
+
+        // Remove key from Redis
+        await redis.del(key);
 
         // login after changing password
         req.session.userId = user.id;
