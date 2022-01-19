@@ -3,28 +3,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require("reflect-metadata");
 const apollo_server_express_1 = require("apollo-server-express");
 const connect_redis_1 = __importDefault(require("connect-redis"));
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
 const ioredis_1 = __importDefault(require("ioredis"));
-require("reflect-metadata");
 const type_graphql_1 = require("type-graphql");
 const constants_1 = require("./constants");
 const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
 const typeorm_1 = require("typeorm");
+const Post_1 = require("./entities/Post");
+const User_1 = require("./entities/User");
 const main = async () => {
-    const conn = await (0, typeorm_1.createConnection)({
-        type: "postgres",
-        database: "graphreddit2",
-        username: "postgres",
-        password: "postgres",
-        logging: true,
-        synchronize: true,
-        entities: [],
-    });
+    console.log('SMOKE MEEEEE');
+    try {
+        const conn = await (0, typeorm_1.createConnection)({
+            type: 'postgres',
+            database: "graphreddit2",
+            username: "shadeemerhi",
+            logging: true,
+            synchronize: true,
+            entities: [Post_1.Post, User_1.User],
+        });
+    }
+    catch (error) {
+        console.log('DB CONNECTION ERROR', error);
+    }
     const app = (0, express_1.default)();
     const RedisStore = (0, connect_redis_1.default)(express_session_1.default);
     const redis = new ioredis_1.default();
@@ -50,7 +57,7 @@ const main = async () => {
             resolvers: [user_1.UserResolver, post_1.PostResolver],
             validate: false,
         }),
-        context: ({ req, res }) => ({ em: orm.em, req, res, redis }),
+        context: ({ req, res }) => ({ req, res, redis }),
     });
     await apolloServer.start();
     apolloServer.applyMiddleware({

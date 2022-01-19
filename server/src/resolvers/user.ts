@@ -1,4 +1,3 @@
-import { EntityManager } from "@mikro-orm/postgresql";
 import argon2 from "argon2";
 import { MyContext } from "src/types";
 import { validateRegister } from "../utils/validateRegister";
@@ -16,6 +15,7 @@ import { User } from "../entities/User";
 import { UsernamePasswordInput } from "./UsernamePasswordInput";
 import { sendEmail } from "../utils/sendEmail";
 import { v4 } from "uuid";
+import { getConnection } from "typeorm";
 
 @ObjectType()
 class UserResponse {
@@ -41,7 +41,7 @@ export class UserResolver {
     async changePassword(
         @Arg("token") token: string,
         @Arg("newPassword") newPassword: string,
-        @Ctx() { req, em, redis }: MyContext
+        @Ctx() { req, redis }: MyContext
     ): Promise<UserResponse> {
         if (newPassword.length <= 2) {
             return {
@@ -68,7 +68,11 @@ export class UserResolver {
             };
         }
 
-        const user = await em.findOne(User, { id: parseInt(userId) });
+        const userIdNum = parseInt(userId);
+
+        const user = await User.findOne(userIdNum);
+
+        // const user = await em.findOne(User, { id: parseInt(userId) });
 
         // This should basically never happen at this step, but just in case!
         if (!user) {
@@ -82,8 +86,10 @@ export class UserResolver {
             };
         }
 
-        user.password = await argon2.hash(newPassword);
-        await em.persistAndFlush(user);
+        await User.update(
+            { id: userIdNum },
+            { password: await argon2.hash(newPassword) }
+        );
 
         // Remove key from Redis
         await redis.del(key);
@@ -99,9 +105,9 @@ export class UserResolver {
     @Mutation(() => Boolean)
     async forgotPassword(
         @Arg("email") email: string,
-        @Ctx() { em, redis }: MyContext
+        @Ctx() { redis }: MyContext
     ) {
-        const user = await em.findOne(User, { email });
+        const user = await User.findOne({ where: { email } });
         if (!user) {
             // email is not in the database
             return false;
@@ -123,26 +129,25 @@ export class UserResolver {
     }
 
     @Query(() => [User])
-    async findUsers(@Ctx() { em }: MyContext): Promise<User[]> {
-        return await em.find(User, {});
+    async findUsers(): Promise<User[]> {
+        return await User.find();
     }
 
     @Query(() => User, { nullable: true })
-    async me(@Ctx() { em, req }: MyContext) {
+    me(@Ctx() { req }: MyContext) {
         // You are not logged in
         if (!req.session.userId) {
             return null;
         }
 
         // User is logged in
-        const user = await em.findOne(User, { id: req.session.userId });
-        return user;
+        return User.findOne(req.session.userId);
     }
 
     @Mutation(() => UserResponse)
     async register(
         @Arg("options") options: UsernamePasswordInput,
-        @Ctx() { em, req }: MyContext
+        @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
         const errors = validateRegister(options);
         if (errors) return { errors };
@@ -151,20 +156,33 @@ export class UserResolver {
         let user;
 
         try {
-            // Using the custom query builder over MikroORM - typical when running into errors with an ORM
-            const result = await (em as EntityManager)
-                .createQueryBuilder(User)
-                .getKnexQuery()
-                .insert({
+            // user = await User.create({
+            //     username: options.username,
+            //     email: options.email,
+            //     password: hashedPassword,
+            // }).save();
+
+            /**
+             * Purposefully did below to show query builder, but above is simpler version
+             */
+            const result = await getConnection()
+                .createQueryBuilder()
+                .insert()
+                .into(User)
+                .values({
                     username: options.username,
                     email: options.email,
                     password: hashedPassword,
-                    created_at: new Date(),
-                    updated_at: new Date(),
                 })
-                .returning("*");
-            user = result[0];
+                .returning("*")
+                .execute();
+            user = result.raw[0];
+
+            console.log("HERE IS RESULT", user);
+
+            // user = result[0];
         } catch (error) {
+            console.log("insert error:", error);
             if (error.detail.includes("already exists")) {
                 return {
                     errors: [
@@ -175,7 +193,6 @@ export class UserResolver {
                     ],
                 };
             }
-            console.log(error);
         }
 
         // store user id session
@@ -190,14 +207,13 @@ export class UserResolver {
     async login(
         @Arg("usernameOrEmail") usernameOrEmail: string,
         @Arg("password") password: string,
-        @Ctx() { em, req }: MyContext
+        @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
-        const user = await em.findOne(
-            User,
-            usernameOrEmail.includes("@") // could add stronger validation but this works for now
+        const user = await User.findOne({
+            where: usernameOrEmail.includes("@") // could add stronger validation but this works for now
                 ? { email: usernameOrEmail }
-                : { username: usernameOrEmail }
-        );
+                : { username: usernameOrEmail },
+        });
         if (!user) {
             return {
                 errors: [

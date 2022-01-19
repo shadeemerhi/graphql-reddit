@@ -24,18 +24,25 @@ declare module "express-session" {
 }
 
 const main = async () => {
+    console.log('SMOKE MEEEEE');
+    
     // const orm = await MikroORM.init(mikroConfig);
     // await orm.getMigrator().up();
 
-    const conn = await createConnection({
-        type: "postgres",
-        database: "graphreddit2",
-        username: "postgres",
-        password: "postgres",
-        logging: true,
-        synchronize: true, // don't need to run migrations
-        entities: [Post, User],
-    });
+    try {
+        const conn = await createConnection({
+            type: 'postgres',
+            database: "graphreddit2",
+            username: "shadeemerhi",
+            logging: true,
+            synchronize: true, // don't need to run migrations
+            entities: [Post, User],
+        });
+    } catch (error) {
+       console.log('DB CONNECTION ERROR', error);
+        
+    }
+
 
 
     const app = express();
