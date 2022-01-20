@@ -17,6 +17,7 @@ import { isAuth } from "../middleware/isAuth";
 class PostInput {
     @Field()
     title: string;
+    
     @Field()
     text: string;
 }

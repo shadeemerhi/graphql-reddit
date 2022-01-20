@@ -10,6 +10,7 @@ import { useRouter } from "next/router";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import { withUrqlClient } from "next-urql";
 import NextLink from "next/link";
+import Layout from "../components/Layout";
 
 interface LoginProps {}
 
@@ -18,7 +19,7 @@ const Login: React.FC<LoginProps> = ({}) => {
     const [{ data, fetching, error }, login] = useLoginMutation();
 
     return (
-        <Wrapper>
+        <Layout>
             <Formik
                 initialValues={{ usernameOrEmail: "", password: "" }}
                 onSubmit={async (values, { setErrors }) => {
@@ -57,14 +58,14 @@ const Login: React.FC<LoginProps> = ({}) => {
                             Login
                         </Button>
                         <Box mt={4}>
-                            <NextLink href='/forgot-password'>
+                            <NextLink href="/forgot-password">
                                 <Link>Forgot Password?</Link>
                             </NextLink>
                         </Box>
                     </Form>
                 )}
             </Formik>
-        </Wrapper>
+        </Layout>
     );
 };
 
