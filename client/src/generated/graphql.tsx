@@ -186,7 +186,7 @@ export type PostsQueryVariables = Exact<{
 }>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: Array<{ __typename?: 'Post', id: number, createdAt: string, updatedAt: string, title: string }> };
+export type PostsQuery = { __typename?: 'Query', posts: Array<{ __typename?: 'Post', id: number, title: string, text: string, createdAt: string, updatedAt: string }> };
 
 export const RegularUserFragmentDoc = gql`
     fragment RegularUser on User {
@@ -292,9 +292,10 @@ export const PostsDocument = gql`
     query Posts($limit: Int!, $cursor: String!) {
   posts(cursor: $cursor, limit: $limit) {
     id
+    title
+    text
     createdAt
     updatedAt
-    title
   }
 }
     `;
