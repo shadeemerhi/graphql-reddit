@@ -14,6 +14,7 @@ import { MyContext } from "./types";
 import { createConnection } from "typeorm";
 import { Post } from "./entities/Post";
 import { User } from "./entities/User";
+import path from "path";
 
 // Not sure if below is best way
 declare module "express-session" {
@@ -22,22 +23,22 @@ declare module "express-session" {
     }
 }
 
+// rerun
 const main = async () => {
     try {
         const conn = await createConnection({
-            type: 'postgres',
+            type: "postgres",
             database: "graphreddit2",
             username: "shadeemerhi",
             logging: true,
             synchronize: true, // don't need to run migrations
+            migrations: [path.join(__dirname, "./migrations/*")],
             entities: [Post, User],
         });
+        await conn.runMigrations();
     } catch (error) {
-       console.log('DB CONNECTION ERROR', error);
-        
+        console.log("DB CONNECTION ERROR", error);
     }
-
-
 
     const app = express();
 
