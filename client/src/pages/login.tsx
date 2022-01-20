@@ -1,16 +1,13 @@
 import { Box, Button, Link } from "@chakra-ui/react";
-import { Formik, Form } from "formik";
-import InputField from "../components/InputField";
-import Wrapper from "../components/Wrapper";
-
-import { useMutation } from "urql";
-import { useLoginMutation } from "../generated/graphql";
-import { toErrorMap } from "../utils/toErrorMap";
-import { useRouter } from "next/router";
-import { createUrqlClient } from "../utils/createUrqlClient";
+import { Form, Formik } from "formik";
 import { withUrqlClient } from "next-urql";
 import NextLink from "next/link";
+import { useRouter } from "next/router";
+import InputField from "../components/InputField";
 import Layout from "../components/Layout";
+import { useLoginMutation } from "../generated/graphql";
+import { createUrqlClient } from "../utils/createUrqlClient";
+import { toErrorMap } from "../utils/toErrorMap";
 
 interface LoginProps {}
 
@@ -29,7 +26,11 @@ const Login: React.FC<LoginProps> = ({}) => {
                         setErrors(toErrorMap(response.data.login.errors));
                     } else if (response.data?.login.user) {
                         // worked
-                        router.push("/");
+                        let redirectPath = "/";
+                        if (typeof router.query.next === "string") {
+                            redirectPath = router.query.next;
+                        }
+                        router.push(redirectPath);
                     }
                 }}
             >
