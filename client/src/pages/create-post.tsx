@@ -14,25 +14,14 @@ import InputField from "../components/InputField";
 import Layout from "../components/Layout";
 import { useCreatePostMutation, useMeQuery } from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
-import withAuth from "./withAuth";
+import { useIsAuth } from "../utils/useIsAuth";
 
 const CreatePost: React.FC<{}> = () => {
     const router = useRouter();
+    useIsAuth();
     const [{ data, fetching }] = useMeQuery();
     const [{ error }, createPost] = useCreatePostMutation();
-
-    // Redirect the user if not logged in
-    useEffect(() => {
-        if (!fetching && !data?.me) {
-            router.replace("/login");
-        }
-    }, [fetching, data]);
-
-    console.log('HERE IS STUFF', fetching);
-    
-
-    if (fetching) return null; // Could show some sort of loader
-
+  
     return (
         <Layout variant="small">
             {error && (
