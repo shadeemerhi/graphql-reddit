@@ -133,10 +133,14 @@ export const createUrqlClient = (ssrExchange: any) => ({
                     },
                     createPost: (_result, args, cache, info) => {
                         // Below invalidates all posts in the cache, triggering a refetch
+
+                        // allFields represents all "Query" objects in the cache (each time any query is made, a Query is added? - I think)
                         const allFields = cache.inspectFields("Query");
+                        // fieldInfos represent all "Query" object of type "posts" - each time we make a post query, one of these is created
                         const fieldInfos = allFields.filter(
                             (info) => info.fieldName === "posts"
                         );
+                        // Here we invalidate every single post "Query"'s, and do so by passing the arguments for each specific one (e.g. limit: 15, cursor: 'someDateString')
                         fieldInfos.forEach((fi) => {
                             cache.invalidate("Query", "posts", fi.arguments);
                         });
