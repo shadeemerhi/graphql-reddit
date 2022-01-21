@@ -15,6 +15,7 @@ import { createConnection } from "typeorm";
 import { Post } from "./entities/Post";
 import { User } from "./entities/User";
 import path from "path";
+import { Updoot } from "./entities/Updoot";
 
 // Not sure if below is best way
 declare module "express-session" {
@@ -33,7 +34,7 @@ const main = async () => {
             logging: true,
             synchronize: true, // don't need to run migrations
             migrations: [path.join(__dirname, "./migrations/*")],
-            entities: [Post, User],
+            entities: [Post, User, Updoot],
         });
         await conn.runMigrations();
     } catch (error) {

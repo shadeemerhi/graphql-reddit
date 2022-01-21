@@ -16,6 +16,7 @@ import {
 import { MyContext } from "src/types";
 import { isAuth } from "../middleware/isAuth";
 import { getConnection, QueryBuilder } from "typeorm";
+import { Updoot } from "../entities/Updoot";
 
 @InputType()
 class PostInput {
@@ -39,6 +40,35 @@ export class PostResolver {
     @FieldResolver(() => String)
     textSnippet(@Root() root: Post) {
         return root.text.slice(0, 50);
+    }
+
+    @Mutation(() => Boolean)
+    @UseMiddleware(isAuth) // protect this route with auth middleware
+    async vote(
+        @Arg("postId", () => Int) postId: number,
+        @Arg("value", () => Int) value: number,
+        @Ctx() { req }: MyContext
+    ) {
+        const isUpdoot = value !== -1;
+        const voteValue = isUpdoot ? 1 : -1;
+        const { userId } = req.session;
+
+        // Transactions are used to make sure both operations succeed; if one fails, both fail
+        await getConnection().query(
+            `
+            START TRANSACTION;
+            
+            insert into updoot ("userId", "postId", "value")
+            values (${userId}, ${postId}, ${voteValue});
+
+            update post
+            set points = points + ${voteValue}
+            where id = ${postId};
+
+            COMMIT;
+        `
+        ); // should escape inserted values; here it's okay because they're all ints, but if there were strings, defs escape
+        return true;
     }
 
     @Query(() => PaginatedPosts)
