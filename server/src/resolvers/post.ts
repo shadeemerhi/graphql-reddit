@@ -49,7 +49,6 @@ export class PostResolver {
         // 20 -> 21
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
-        console.log("HERE IS CURSOR", cursor);
 
         const replacements: any[] = [realLimitPlusOne];
 

@@ -50,7 +50,6 @@ let PostResolver = class PostResolver {
     async posts(limit, cursor) {
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
-        console.log("HERE IS CURSOR", cursor);
         const replacements = [realLimitPlusOne];
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));

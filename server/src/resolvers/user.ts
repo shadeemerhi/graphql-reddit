@@ -5,10 +5,12 @@ import {
     Arg,
     Ctx,
     Field,
+    FieldResolver,
     Mutation,
     ObjectType,
     Query,
     Resolver,
+    Root,
 } from "type-graphql";
 import { COOKIE_NAME, FORGOT_PASSWORD_PREFIX } from "../constants";
 import { User } from "../entities/User";
@@ -35,8 +37,20 @@ class FieldError {
     message: string;
 }
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
+
+    // Field Permissions!
+    @FieldResolver(() => String)
+    email(@Root() user: User, @Ctx() { req }: MyContext) {
+        // This is the current user and its okay to show them their own email
+        if (req.session.userId === user.id) {
+            return user.email;
+        }
+        // current user wants to see someone elses email
+        return "";
+    }
+
     @Mutation(() => UserResponse)
     async changePassword(
         @Arg("token") token: string,
