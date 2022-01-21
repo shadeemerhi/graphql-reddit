@@ -16,7 +16,7 @@ import {
 import { useState } from "react";
 
 const Index = () => {
-    const [variables, setVariables] = useState({ limit: 33, cursor: "" });
+    const [variables, setVariables] = useState({ limit: 15, cursor: "" });
     const [{ fetching, data, error }] = usePostsQuery({ variables });
 
     if (!fetching && !data) {
@@ -48,6 +48,7 @@ const Index = () => {
                               borderRadius="8px"
                           >
                               <Heading fontSize="xl">{post.title}</Heading>
+                              <Text><span><strong>Author: </strong></span>{post.creator.username}</Text>
                               <Text mt={4}>{post.textSnippet}</Text>
                           </Box>
                       ))

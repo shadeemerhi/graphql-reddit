@@ -31,6 +31,7 @@ export type Mutation = {
   logout?: Maybe<Scalars['Boolean']>;
   register: UserResponse;
   updatePost?: Maybe<Post>;
+  vote: Scalars['Boolean'];
 };
 
 
@@ -71,6 +72,12 @@ export type MutationUpdatePostArgs = {
   title?: InputMaybe<Scalars['String']>;
 };
 
+
+export type MutationVoteArgs = {
+  postId: Scalars['Int'];
+  value: Scalars['Int'];
+};
+
 export type PaginatedPosts = {
   __typename?: 'PaginatedPosts';
   hasMore: Scalars['Boolean'];
@@ -80,6 +87,7 @@ export type PaginatedPosts = {
 export type Post = {
   __typename?: 'Post';
   createdAt: Scalars['String'];
+  creator: User;
   creatorId: Scalars['Float'];
   id: Scalars['Float'];
   points: Scalars['Float'];
@@ -87,6 +95,7 @@ export type Post = {
   textSnippet: Scalars['String'];
   title: Scalars['String'];
   updatedAt: Scalars['String'];
+  updoots: Updoot;
 };
 
 export type PostInput = {
@@ -111,6 +120,15 @@ export type QueryPostArgs = {
 export type QueryPostsArgs = {
   cursor?: InputMaybe<Scalars['String']>;
   limit: Scalars['Int'];
+};
+
+export type Updoot = {
+  __typename?: 'Updoot';
+  post: Post;
+  postId: Scalars['Float'];
+  user: User;
+  userId: Scalars['Float'];
+  value: Scalars['Float'];
 };
 
 export type User = {
@@ -193,7 +211,7 @@ export type PostsQueryVariables = Exact<{
 }>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PaginatedPosts', hasMore: boolean, posts: Array<{ __typename?: 'Post', id: number, title: string, textSnippet: string, createdAt: string, updatedAt: string }> } };
+export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PaginatedPosts', hasMore: boolean, posts: Array<{ __typename?: 'Post', id: number, title: string, textSnippet: string, createdAt: string, updatedAt: string, creator: { __typename?: 'User', id: number, username: string } }> } };
 
 export const RegularUserFragmentDoc = gql`
     fragment RegularUser on User {
@@ -305,6 +323,10 @@ export const PostsDocument = gql`
       textSnippet
       createdAt
       updatedAt
+      creator {
+        id
+        username
+      }
     }
   }
 }

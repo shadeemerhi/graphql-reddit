@@ -13,6 +13,8 @@ import {
     MeDocument,
     MeQuery,
     RegisterMutation,
+    CreatePostMutation,
+    PostsQuery,
 } from "../generated/graphql";
 import { betterUpdateQuery } from "../utils/betterUpdateQuery";
 
@@ -57,8 +59,8 @@ export const cursorPagination = (): Resolver => {
         fieldInfos.forEach((item) => {
             // const data = cache.resolve(entityKey, item.fieldKey) as string[];
             const key = cache.resolve(entityKey, item.fieldKey) as string;
-            console.log('HERE IS KEY', key);
-            
+            console.log("HERE IS KEY", key);
+
             const data = cache.resolve(key, "posts") as string[];
             const _hasMore = cache.resolve(key, "hasMore");
 
@@ -70,59 +72,7 @@ export const cursorPagination = (): Resolver => {
             results.push(...data);
         });
 
-        return { __typename: 'PaginatedPosts', hasMore, posts: results };
-
-        // const visited = new Set();
-        // let result: NullArray<string> = [];
-        // let prevOffset: number | null = null;
-
-        // for (let i = 0; i < size; i++) {
-        //     const { fieldKey, arguments: args } = fieldInfos[i];
-        //     if (args === null || !compareArgs(fieldArgs, args)) {
-        //         continue;
-        //     }
-
-        //     const links = cache.resolve(entityKey, fieldKey) as string[];
-        //     const currentOffset = args[offsetArgument];
-
-        //     if (
-        //         links === null ||
-        //         links.length === 0 ||
-        //         typeof currentOffset !== "number"
-        //     ) {
-        //         continue;
-        //     }
-
-        //     const tempResult: NullArray<string> = [];
-
-        //     for (let j = 0; j < links.length; j++) {
-        //         const link = links[j];
-        //         if (visited.has(link)) continue;
-        //         tempResult.push(link);
-        //         visited.add(link);
-        //     }
-
-        //     if (
-        //         (!prevOffset || currentOffset > prevOffset) ===
-        //         (mergeMode === "after")
-        //     ) {
-        //         result = [...result, ...tempResult];
-        //     } else {
-        //         result = [...tempResult, ...result];
-        //     }
-
-        //     prevOffset = currentOffset;
-        // }
-
-        // const hasCurrentPage = cache.resolve(entityKey, fieldName, fieldArgs);
-        // if (hasCurrentPage) {
-        //     return result;
-        // } else if (!(info as any).store.schema) {
-        //     return undefined;
-        // } else {
-        //     info.partial = true;
-        //     return result;
-        // }
+        return { __typename: "PaginatedPosts", hasMore, posts: results };
     };
 };
 
@@ -180,6 +130,16 @@ export const createUrqlClient = (ssrExchange: any) => ({
                                 }
                             }
                         );
+                    },
+                    createPost: (_result, args, cache, info) => {
+                        // Below invalidates all posts in the cache, triggering a refetch
+                        const allFields = cache.inspectFields("Query");
+                        const fieldInfos = allFields.filter(
+                            (info) => info.fieldName === "posts"
+                        );
+                        fieldInfos.forEach((fi) => {
+                            cache.invalidate("Query", "posts", fi.arguments);
+                        });
                     },
                     logout: (_result, args, cache, info) => {
                         betterUpdateQuery<LogoutMutation, MeQuery>(
