@@ -53,21 +53,51 @@ export class PostResolver {
         const voteValue = isUpdoot ? 1 : -1;
         const { userId } = req.session;
 
-        // Transactions are used to make sure both operations succeed; if one fails, both fail
-        await getConnection().query(
-            `
-            START TRANSACTION;
-            
-            insert into updoot ("userId", "postId", "value")
-            values (${userId}, ${postId}, ${voteValue});
+        const updoot = await Updoot.findOne({ where: { postId, userId } });
 
-            update post
-            set points = points + ${voteValue}
-            where id = ${postId};
+        // the user has voted on the post and they're changing the vote (i.e. updating vote)
+        if (updoot && updoot.value !== voteValue) {
+            await getConnection().transaction(async (transManager) => {
+                await transManager.query(
+                    `
+                update updoot
+                set value = $1
+                where "userId" = $2 and "postId" = $3 
+                `,
+                    [voteValue, userId, postId]
+                );
 
-            COMMIT;
-        `
-        ); // should escape inserted values; here it's okay because they're all ints, but if there were strings, defs escape
+                await transManager.query(
+                    `
+                update post
+                set points = points + $1
+                where id = $2
+                `,
+                    [2 * voteValue, postId] // need to add/subtract 2 if updating
+                );
+            });
+        }
+        // has not voted on this post before
+        else if (!updoot) {
+            await getConnection().transaction(async (transManager) => {
+                await transManager.query(
+                    `
+                insert into updoot ("userId", "postId", "value")
+                values ($1, $2, $3)
+                `,
+                    [userId, postId, voteValue]
+                );
+
+                await transManager.query(
+                    `
+                update post
+                set points = points + $1
+                where id = $2
+                `,
+                    [voteValue, postId]
+                );
+            });
+        }
         return true;
     }
 

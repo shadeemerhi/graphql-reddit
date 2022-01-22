@@ -9,11 +9,15 @@ import {
     Button,
     Flex,
     Heading,
+    Icon,
+    IconButton,
     Link,
     Stack,
     Text,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
+import UpdootSection from "./UpdootSection";
 
 const Index = () => {
     const [variables, setVariables] = useState({ limit: 15, cursor: "" });
@@ -22,9 +26,6 @@ const Index = () => {
     if (!fetching && !data) {
         return <div>No posts available</div>; // Something went wrong
     }
-    console.log("VARIABLES", variables);
-    
-
     return (
         <Layout>
             <Flex justifyContent="space-between" alignItems="center">
@@ -42,14 +43,23 @@ const Index = () => {
                 {data
                     ? data.posts.posts.map((post) => (
                           <Box
+                              display="flex"
                               p={5}
                               shadow="md"
                               borderWidth="1px"
                               borderRadius="8px"
                           >
-                              <Heading fontSize="xl">{post.title}</Heading>
-                              <Text><span><strong>Author: </strong></span>{post.creator.username}</Text>
-                              <Text mt={4}>{post.textSnippet}</Text>
+                              <UpdootSection post={post} />
+                              <Box>
+                                  <Heading fontSize="xl">{post.title}</Heading>
+                                  <Text>
+                                      <span>
+                                          <strong>Author: </strong>
+                                      </span>
+                                      {post.creator.username}
+                                  </Text>
+                                  <Text mt={4}>{post.textSnippet}</Text>
+                              </Box>
                           </Box>
                       ))
                     : null}

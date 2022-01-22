@@ -17,6 +17,7 @@ const Post_1 = require("../entities/Post");
 const type_graphql_1 = require("type-graphql");
 const isAuth_1 = require("../middleware/isAuth");
 const typeorm_1 = require("typeorm");
+const Updoot_1 = require("../entities/Updoot");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -51,18 +52,34 @@ let PostResolver = class PostResolver {
         const isUpdoot = value !== -1;
         const voteValue = isUpdoot ? 1 : -1;
         const { userId } = req.session;
-        await (0, typeorm_1.getConnection)().query(`
-            START TRANSACTION;
-            
-            insert into updoot ("userId", "postId", "value")
-            values (${userId}, ${postId}, ${voteValue});
-
-            update post
-            set points = points + ${voteValue}
-            where id = ${postId};
-
-            COMMIT;
-        `);
+        const updoot = await Updoot_1.Updoot.findOne({ where: { postId, userId } });
+        if (updoot && updoot.value !== voteValue) {
+            await (0, typeorm_1.getConnection)().transaction(async (transManager) => {
+                await transManager.query(`
+                update updoot
+                set value = $1
+                where "userId" = $2 and "postId" = $3 
+                `, [voteValue, userId, postId]);
+                await transManager.query(`
+                update post
+                set points = points + $1
+                where id = $2
+                `, [2 * voteValue, postId]);
+            });
+        }
+        else if (!updoot) {
+            await (0, typeorm_1.getConnection)().transaction(async (transManager) => {
+                await transManager.query(`
+                insert into updoot ("userId", "postId", "value")
+                values ($1, $2, $3)
+                `, [userId, postId, voteValue]);
+                await transManager.query(`
+                update post
+                set points = points + $1
+                where id = $2
+                `, [voteValue, postId]);
+            });
+        }
         return true;
     }
     async posts(limit, cursor) {
