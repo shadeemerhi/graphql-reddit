@@ -10,6 +10,10 @@ const Navbar: React.FC<NavBarProps> = () => {
     const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
     const [{ fetching, error, data }] = useMeQuery({
         pause: isServer(), // pause rendering until ssr is complete
+        /**
+         * Since now we are doing SSR cookie forwarding, we don't *need* to pause rendering if on server,
+         * however we will keep it as this query doesn't *need* to be done on the server
+         */
     });
 
     let body = null;

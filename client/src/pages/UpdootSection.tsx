@@ -44,8 +44,6 @@ const UpdootSection: React.FC<UpdootSectionProps> = ({ post }) => {
                 onClick={() => onVote("updoot-loading", 1)}
                 />
             {post.points}
-            <br />
-            {JSON.stringify(post.voteStatus)}
             <IconButton
                 color={post.voteStatus === -1 ? "red" : 'gray'}
                 aria-label="downvote"
