@@ -117,8 +117,8 @@ let PostResolver = class PostResolver {
             hasMore: posts.length === realLimitPlusOne,
         };
     }
-    post(id) {
-        return Post_1.Post.findOne(id);
+    async post(id) {
+        return Post_1.Post.findOne(id, { relations: ["creator"] });
     }
     async createPost(input, { req }) {
         return Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();

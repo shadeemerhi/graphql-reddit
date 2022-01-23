@@ -118,14 +118,13 @@ export class PostResolver {
         if (req.session.userId) {
             replacements.push(req.session.userId);
         }
-        
+
         let cursorIndex = 2;
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
             cursorIndex = replacements.length; // Index of cursor changes depending on logged in state
         }
 
-        
         const posts = await getConnection().query(
             `
         select p.*,
@@ -161,8 +160,8 @@ export class PostResolver {
     }
 
     @Query(() => Post, { nullable: true })
-    post(@Arg("id", () => Int) id: number): Promise<Post | undefined> {
-        return Post.findOne(id);
+    async post(@Arg("id", () => Int) id: number): Promise<Post | undefined> {
+        return Post.findOne(id, { relations: ["creator"] }); // performs join for us
     }
 
     @Mutation(() => Post)
