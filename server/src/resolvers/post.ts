@@ -200,7 +200,17 @@ export class PostResolver {
         @Ctx() { req }: MyContext
     ): Promise<boolean> {
         // Could put try/catch in these areas
-        await Post.delete({ id, creatorId: req.session.userId }); // can only delete posts that you are the owner of
+        const post = await Post.findOne(id);
+
+        if (!post) {
+            return false;
+        }
+
+        if (post.creatorId !== req.session.userId) {
+            throw new Error("Not Authorized");
+        }
+        
+        await Post.delete({ id });
         return true;
     }
 }

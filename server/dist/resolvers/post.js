@@ -134,7 +134,14 @@ let PostResolver = class PostResolver {
         return post;
     }
     async deletePost(id, { req }) {
-        await Post_1.Post.delete({ id, creatorId: req.session.userId });
+        const post = await Post_1.Post.findOne(id);
+        if (!post) {
+            return false;
+        }
+        if (post.creatorId !== req.session.userId) {
+            throw new Error("Not Authorized");
+        }
+        await Post_1.Post.delete({ id });
         return true;
     }
 };

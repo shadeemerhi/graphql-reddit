@@ -50,55 +50,58 @@ const Index = () => {
             <br />
             <Stack spacing={8}>
                 {data
-                    ? data.posts.posts.map((post) => (
-                          <Box
-                              display="flex"
-                              p={5}
-                              shadow="md"
-                              borderWidth="1px"
-                              borderRadius="8px"
-                          >
-                              <UpdootSection post={post} />
-                              <Box width="100%">
-                                  <Box
-                                      display="flex"
-                                      alignItems="center"
-                                      justifyContent="space-between"
-                                  >
-                                      <NextLink
-                                          href="/post/[id]"
-                                          as={`/post/${post.id}`}
+                    ? data.posts.posts.map((post) =>
+                          !post ? null : (
+                              <Box
+                                  display="flex"
+                                  p={5}
+                                  shadow="md"
+                                  borderWidth="1px"
+                                  borderRadius="8px"
+                              >
+                                  <UpdootSection post={post} />
+                                  <Box width="100%">
+                                      <Box
+                                          display="flex"
+                                          alignItems="center"
+                                          justifyContent="space-between"
                                       >
-                                          <Link>
-                                              <Heading fontSize="xl">
-                                                  {post.title}
-                                              </Heading>
-                                          </Link>
-                                      </NextLink>
-                                      {meData?.me?.id === post.creator.id && (
-                                          <IconButton
-                                              aria-label="delete-post"
-                                              icon={<DeleteIcon />}
-                                              _focus={{ outline: "none" }}
-                                              isLoading={deleteFetch}
-                                              onClick={async () =>
-                                                  await deletePost({
-                                                      id: post.id,
-                                                  })
-                                              }
-                                          />
-                                      )}
+                                          <NextLink
+                                              href="/post/[id]"
+                                              as={`/post/${post.id}`}
+                                          >
+                                              <Link>
+                                                  <Heading fontSize="xl">
+                                                      {post.title}
+                                                  </Heading>
+                                              </Link>
+                                          </NextLink>
+                                          {meData?.me?.id ===
+                                              post.creator.id && (
+                                              <IconButton
+                                                  aria-label="delete-post"
+                                                  icon={<DeleteIcon />}
+                                                  _focus={{ outline: "none" }}
+                                                  isLoading={deleteFetch}
+                                                  onClick={async () =>
+                                                      await deletePost({
+                                                          id: post.id,
+                                                      })
+                                                  }
+                                              />
+                                          )}
+                                      </Box>
+                                      <Text>
+                                          <span>
+                                              <strong>Author: </strong>
+                                          </span>
+                                          {post.creator.username}
+                                      </Text>
+                                      <Text mt={4}>{post.textSnippet}</Text>
                                   </Box>
-                                  <Text>
-                                      <span>
-                                          <strong>Author: </strong>
-                                      </span>
-                                      {post.creator.username}
-                                  </Text>
-                                  <Text mt={4}>{post.textSnippet}</Text>
                               </Box>
-                          </Box>
-                      ))
+                          )
+                      )
                     : null}
             </Stack>
             {data && data.posts.hasMore && (
