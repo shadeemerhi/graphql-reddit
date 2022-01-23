@@ -4,6 +4,7 @@ import {
     dedupExchange,
     Exchange,
     fetchExchange,
+    gql,
     stringifyVariables,
 } from "urql";
 import { pipe, tap } from "wonka";
@@ -15,6 +16,9 @@ import {
     RegisterMutation,
     CreatePostMutation,
     PostsQuery,
+    VoteMutationVariables,
+    MutationVoteArgs,
+    VoteDocument,
 } from "../generated/graphql";
 import { betterUpdateQuery } from "../utils/betterUpdateQuery";
 
@@ -95,6 +99,39 @@ export const createUrqlClient = (ssrExchange: any) => ({
             },
             updates: {
                 Mutation: {
+                    vote: (_result, args, cache, info) => {
+                        const { postId, value } = args as VoteMutationVariables;
+                        const data = cache.readFragment(
+                            gql`
+                                fragment _ on Post {
+                                    id
+                                    points
+                                    voteStatus
+                                }
+                            `,
+                            { id: postId }
+                        ); // Data or null
+                        console.log("data:", _result, data);
+                        if (data) {
+                            if (data.voteStatus === args.value) return;
+                            const newPoints =
+                                (data.points as number) +
+                                (!data.voteStatus ? 1 : 2) * value; // If user hasn't voted before (i.e. voteStatus is null), only add/sub 1
+                            cache.writeFragment(
+                                gql`
+                                    fragment _ on Post {
+                                        points
+                                        voteStatus
+                                    }
+                                `,
+                                {
+                                    id: postId,
+                                    points: newPoints,
+                                    voteStatus: value,
+                                }
+                            );
+                        }
+                    },
                     login: (_result, args, cache, info) => {
                         betterUpdateQuery<LoginMutation, MeQuery>(
                             cache,

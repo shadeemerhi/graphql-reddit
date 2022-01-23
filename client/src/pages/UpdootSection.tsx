@@ -19,6 +19,10 @@ const UpdootSection: React.FC<UpdootSectionProps> = ({ post }) => {
     const [{ data, error }, vote] = useVoteMutation();
 
     const onVote = async (state: typeof loadingState, value: number) => {
+        // Prevent multiple votes in a single direction (up/down)
+        if (post.voteStatus === value) {
+            return;
+        }
         setLoadingState(state);
         await vote({ postId: post.id, value });
         setLoadingState("not-loading");
@@ -32,7 +36,7 @@ const UpdootSection: React.FC<UpdootSectionProps> = ({ post }) => {
             mr={6}
         >
             <IconButton
-                color="grey"
+                color={post.voteStatus === 1 ? 'green.400' : 'gray'}
                 aria-label="upvote"
                 icon={<TriangleUpIcon />}
                 _focus={{ outline: "none" }}
@@ -40,8 +44,10 @@ const UpdootSection: React.FC<UpdootSectionProps> = ({ post }) => {
                 onClick={() => onVote("updoot-loading", 1)}
                 />
             {post.points}
+            <br />
+            {JSON.stringify(post.voteStatus)}
             <IconButton
-                color="grey"
+                color={post.voteStatus === -1 ? "red" : 'gray'}
                 aria-label="downvote"
                 icon={<TriangleDownIcon />}
                 _focus={{ outline: "none" }}

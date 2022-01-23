@@ -93,7 +93,9 @@ export class PostResolver {
                 update post
                 set points = points + $1
                 where id = $2
+                returning *;
                 `,
+
                     [voteValue, postId]
                 );
             });
@@ -104,7 +106,8 @@ export class PostResolver {
     @Query(() => PaginatedPosts)
     async posts(
         @Arg("limit", () => Int) limit: number,
-        @Arg("cursor", () => String, { nullable: true }) cursor: string | null
+        @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
+        @Ctx() { req }: MyContext
     ): Promise<PaginatedPosts> {
         // 20 -> 21
         const realLimit = Math.min(50, limit);
@@ -112,10 +115,17 @@ export class PostResolver {
 
         const replacements: any[] = [realLimitPlusOne];
 
+        if (req.session.userId) {
+            replacements.push(req.session.userId);
+        }
+        
+        let cursorIndex = 2;
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
+            cursorIndex = replacements.length; // Index of cursor changes depending on logged in state
         }
 
+        
         const posts = await getConnection().query(
             `
         select p.*,
@@ -123,10 +133,20 @@ export class PostResolver {
             'id', u.id,
             'username', u.username,
             'email', u.email
-        ) creator
+        ) creator,
+        ${
+            /**
+             * If the current user has voted on the post, set the voteStatus to
+             * be the value of that vote, to prevent multiple votes in one direction (up/down)
+             */
+            // Session not passed in SSR
+            req.session.userId
+                ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
+                : 'null as "voteStatus"'
+        }
         from post p
         inner join public.user u on u.id = p."creatorId"
-        ${cursor ? `where p."createdAt" < $2` : ``}
+        ${cursor ? `where p."createdAt" < $${cursorIndex}` : ``}
 
         order by p."createdAt" DESC
         limit $1
