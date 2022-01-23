@@ -196,6 +196,11 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                                 );
                             });
                         },
+                        deletePost: (_result, args, cache, info) => {
+                            console.log("HERE THINGS", args.id);
+
+                            cache.invalidate({ __typename: 'Post', id: args.id as number });
+                        },
                         logout: (_result, args, cache, info) => {
                             betterUpdateQuery<LogoutMutation, MeQuery>(
                                 cache,

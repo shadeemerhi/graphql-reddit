@@ -194,7 +194,7 @@ export class PostResolver {
     }
 
     @Mutation(() => Boolean)
-    async deletePost(@Arg("id") id: number): Promise<boolean> {
+    async deletePost(@Arg("id", () => Int) id: number): Promise<boolean> {
         // Could put try/catch in these areas
         await Post.delete(id);
         return true;

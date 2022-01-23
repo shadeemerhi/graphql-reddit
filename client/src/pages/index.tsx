@@ -1,6 +1,10 @@
 import { withUrqlClient } from "next-urql";
 import Navbar from "../components/Navbar";
-import { usePostsQuery } from "../generated/graphql";
+import {
+    useDeletePostMutation,
+    useMeQuery,
+    usePostsQuery,
+} from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import NextLink from "next/link";
 import Layout from "../components/Layout";
@@ -16,12 +20,17 @@ import {
     Text,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
+import { DeleteIcon, TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import UpdootSection from "./UpdootSection";
+import Id from "./post/[id]";
 
 const Index = () => {
     const [variables, setVariables] = useState({ limit: 15, cursor: "" });
     const [{ fetching, data, error }] = usePostsQuery({ variables });
+    const [{ data: meData }, _] = useMeQuery();
+    const [{ fetching: deleteFetch }, deletePost] = useDeletePostMutation();
+
+    console.log("HERE IS ME", meData?.me?.username);
 
     if (!fetching && !data) {
         return <div>No posts available</div>; // Something went wrong
@@ -51,13 +60,29 @@ const Index = () => {
                           >
                               <UpdootSection post={post} />
                               <Box>
-                                  <NextLink href='/post/[id]' as={`/post/${post.id}`}>
-                                      <Link>
-                                          <Heading fontSize="xl">
-                                              {post.title}
-                                          </Heading>
-                                      </Link>
-                                  </NextLink>
+                                  <Box display="flex" alignItems="center">
+                                      <NextLink
+                                          href="/post/[id]"
+                                          as={`/post/${post.id}`}
+                                      >
+                                          <Link>
+                                              <Heading fontSize="xl">
+                                                  {post.title}
+                                              </Heading>
+                                          </Link>
+                                      </NextLink>
+                                      {meData?.me?.id === post.creator.id && (
+                                          <IconButton
+                                              aria-label="delete-post"
+                                              icon={<DeleteIcon />}
+                                              _focus={{ outline: "none" }}
+                                              isLoading={deleteFetch}
+                                              onClick={async () =>
+                                                  await deletePost({ id: post.id })
+                                              }
+                                          />
+                                      )}
+                                  </Box>
                                   <Text>
                                       <span>
                                           <strong>Author: </strong>
