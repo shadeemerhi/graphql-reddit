@@ -3,6 +3,7 @@ query Post($id: Int!) {
         id
         title
         textSnippet
+        text
         points
         voteStatus
         creatorId
