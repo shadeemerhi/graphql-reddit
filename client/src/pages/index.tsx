@@ -59,8 +59,12 @@ const Index = () => {
                               borderRadius="8px"
                           >
                               <UpdootSection post={post} />
-                              <Box>
-                                  <Box display="flex" alignItems="center">
+                              <Box width="100%">
+                                  <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      justifyContent="space-between"
+                                  >
                                       <NextLink
                                           href="/post/[id]"
                                           as={`/post/${post.id}`}
@@ -78,7 +82,9 @@ const Index = () => {
                                               _focus={{ outline: "none" }}
                                               isLoading={deleteFetch}
                                               onClick={async () =>
-                                                  await deletePost({ id: post.id })
+                                                  await deletePost({
+                                                      id: post.id,
+                                                  })
                                               }
                                           />
                                       )}

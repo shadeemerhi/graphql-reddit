@@ -19,6 +19,7 @@ import {
     VoteMutationVariables,
     MutationVoteArgs,
     VoteDocument,
+    DeletePostMutationVariables,
 } from "../generated/graphql";
 import { betterUpdateQuery } from "../utils/betterUpdateQuery";
 import { isServer } from "./isServer";
@@ -197,9 +198,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                             });
                         },
                         deletePost: (_result, args, cache, info) => {
-                            console.log("HERE THINGS", args.id);
-
-                            cache.invalidate({ __typename: 'Post', id: args.id as number });
+                            cache.invalidate({ __typename: 'Post', id: (args as DeletePostMutationVariables).id });
                         },
                         logout: (_result, args, cache, info) => {
                             betterUpdateQuery<LogoutMutation, MeQuery>(
