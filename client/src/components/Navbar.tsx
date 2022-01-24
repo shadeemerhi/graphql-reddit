@@ -1,5 +1,6 @@
 import { Box, Button, Flex, Heading, Link, Text } from "@chakra-ui/react";
 import NextLink from "next/link";
+import { useRouter } from "next/router";
 
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
 import { isServer } from "../utils/isServer";
@@ -7,6 +8,7 @@ import { isServer } from "../utils/isServer";
 interface NavBarProps {}
 
 const Navbar: React.FC<NavBarProps> = () => {
+    const router = useRouter();
     const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
     const [{ fetching, error, data }] = useMeQuery({
         pause: isServer(), // pause rendering until ssr is complete
@@ -50,7 +52,10 @@ const Navbar: React.FC<NavBarProps> = () => {
                     textColor={"white"}
                     variant={"link"}
                     isLoading={logoutFetching}
-                    onClick={() => logout()}
+                    onClick={async () => {
+                        await logout();
+                        router.reload();
+                    }}
                 >
                     Logout
                 </Button>
@@ -58,10 +63,15 @@ const Navbar: React.FC<NavBarProps> = () => {
         );
     }
     return (
-        <Flex bg="tan" p={4} alignItems='center'>
+        <Flex bg="tan" p={4} alignItems="center">
             <Box>
                 <NextLink href="/">
-                    <Text fontWeight={800} fontSize={20} color="white" cursor='pointer'>
+                    <Text
+                        fontWeight={800}
+                        fontSize={20}
+                        color="white"
+                        cursor="pointer"
+                    >
                         GraphQL Reddit
                     </Text>
                 </NextLink>

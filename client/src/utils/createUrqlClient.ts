@@ -1,4 +1,4 @@
-import { cacheExchange, Resolver } from "@urql/exchange-graphcache";
+import { cacheExchange, Resolver, Cache } from "@urql/exchange-graphcache";
 import Router from "next/router";
 import {
     dedupExchange,
@@ -23,6 +23,17 @@ import {
 } from "../generated/graphql";
 import { betterUpdateQuery } from "../utils/betterUpdateQuery";
 import { isServer } from "./isServer";
+
+const invalidateAllPosts = (cache: Cache) => {
+    // allFields represents all "Query" objects in the cache (each time any query is made, a Query is added? - I think)
+    const allFields = cache.inspectFields("Query");
+    // fieldInfos represent all "Query" object of type "posts" - each time we make a post query, one of these is created
+    const fieldInfos = allFields.filter((info) => info.fieldName === "posts");
+    // Here we invalidate every single post "Query"'s, and do so by passing the arguments for each specific one (e.g. limit: 15, cursor: 'someDateString')
+    fieldInfos.forEach((fi) => {
+        cache.invalidate("Query", "posts", fi.arguments);
+    });
+};
 
 const errorExchange: Exchange =
     ({ forward }) =>
@@ -160,6 +171,7 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                                     }
                                 }
                             );
+                            invalidateAllPosts(cache);
                         },
                         register: (_result, args, cache, info) => {
                             betterUpdateQuery<RegisterMutation, MeQuery>(
@@ -180,25 +192,13 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                             );
                         },
                         createPost: (_result, args, cache, info) => {
-                            // Below invalidates all posts in the cache, triggering a refetch
-
-                            // allFields represents all "Query" objects in the cache (each time any query is made, a Query is added? - I think)
-                            const allFields = cache.inspectFields("Query");
-                            // fieldInfos represent all "Query" object of type "posts" - each time we make a post query, one of these is created
-                            const fieldInfos = allFields.filter(
-                                (info) => info.fieldName === "posts"
-                            );
-                            // Here we invalidate every single post "Query"'s, and do so by passing the arguments for each specific one (e.g. limit: 15, cursor: 'someDateString')
-                            fieldInfos.forEach((fi) => {
-                                cache.invalidate(
-                                    "Query",
-                                    "posts",
-                                    fi.arguments
-                                );
-                            });
+                            invalidateAllPosts(cache);
                         },
                         deletePost: (_result, args, cache, info) => {
-                            cache.invalidate({ __typename: 'Post', id: (args as DeletePostMutationVariables).id });
+                            cache.invalidate({
+                                __typename: "Post",
+                                id: (args as DeletePostMutationVariables).id,
+                            });
                         },
                         logout: (_result, args, cache, info) => {
                             betterUpdateQuery<LogoutMutation, MeQuery>(
