@@ -11,12 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserResolver = void 0;
-const argon2_1 = __importDefault(require("argon2"));
 const validateRegister_1 = require("../utils/validateRegister");
 const type_graphql_1 = require("type-graphql");
 const constants_1 = require("../constants");
@@ -93,7 +89,7 @@ let UserResolver = class UserResolver {
                 ],
             };
         }
-        await User_1.User.update({ id: userIdNum }, { password: await argon2_1.default.hash(newPassword) });
+        await User_1.User.update({ id: userIdNum }, { password: newPassword });
         await redis.del(key);
         req.session.userId = user.id;
         return {
@@ -123,7 +119,6 @@ let UserResolver = class UserResolver {
         const errors = (0, validateRegister_1.validateRegister)(options);
         if (errors)
             return { errors };
-        const hashedPassword = await argon2_1.default.hash(options.password);
         let user;
         try {
             const result = await (0, typeorm_1.getConnection)()
@@ -133,7 +128,7 @@ let UserResolver = class UserResolver {
                 .values({
                 username: options.username,
                 email: options.email,
-                password: hashedPassword,
+                password: options.password,
             })
                 .returning("*")
                 .execute();
@@ -174,7 +169,7 @@ let UserResolver = class UserResolver {
                 ],
             };
         }
-        const valid = await argon2_1.default.verify(user.password, password);
+        const valid = user.password === password;
         if (!valid) {
             return {
                 errors: [

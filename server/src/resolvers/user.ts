@@ -1,4 +1,4 @@
-import argon2 from "argon2";
+// import argon2 from "argon2"; // having issues with argon in docker
 import { MyContext } from "src/types";
 import { validateRegister } from "../utils/validateRegister";
 import {
@@ -102,7 +102,8 @@ export class UserResolver {
 
         await User.update(
             { id: userIdNum },
-            { password: await argon2.hash(newPassword) }
+            // { password: await argon2.hash(newPassword) } // having issues with argon in docker
+            { password: newPassword } // only because having issues with docker in argon
         );
 
         // Remove key from Redis
@@ -172,7 +173,7 @@ export class UserResolver {
         const errors = validateRegister(options);
         if (errors) return { errors };
 
-        const hashedPassword = await argon2.hash(options.password);
+        // const hashedPassword = await argon2.hash(options.password); // having issues with argon in docker
         let user;
 
         try {
@@ -192,7 +193,7 @@ export class UserResolver {
                 .values({
                     username: options.username,
                     email: options.email,
-                    password: hashedPassword,
+                    password: options.password, // should be hashedPassword, but having issues with argon in docker
                 })
                 .returning("*")
                 .execute();
@@ -245,7 +246,8 @@ export class UserResolver {
             };
         }
 
-        const valid = await argon2.verify(user.password, password);
+        // const valid = await argon2.verify(user.password, password); // having issues with argon in docker
+        const valid = user.password === password; // only because having issues with argon in docker
 
         if (!valid) {
             return {

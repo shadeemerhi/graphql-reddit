@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import 'dotenv-safe/config';
+import "dotenv-safe/config";
 import { ApolloServer } from "apollo-server-express";
 import connectRedis from "connect-redis";
 import cors from "cors";
@@ -33,7 +33,7 @@ const main = async () => {
             type: "postgres",
             url: process.env.DATABASE_URL,
             logging: true,
-            synchronize: true, // don't need to run migrations
+            // synchronize: true, // don't need to run migrations - don't want to do in production
             migrations: [path.join(__dirname, "./migrations/*")],
             entities: [Post, User, Updoot],
         });
@@ -46,6 +46,11 @@ const main = async () => {
 
     const RedisStore = connectRedis(session);
     const redis = new Redis(process.env.REDIS_URL);
+    /**
+     * telling express that we have nginx sitting in front of api
+     * allows for cookies and sessions to work
+     */
+    app.set("proxy", 1);
     app.use(
         cors({
             origin: process.env.CORS_ORIGIN,
@@ -62,7 +67,7 @@ const main = async () => {
                 httpOnly: true,
                 sameSite: "lax", // csrf
                 secure: __prod__, // cookie only works in https (only in production)
-                domain: __prod__ ? '.first-project.com' : undefined
+                domain: __prod__ ? ".first-project.com" : undefined,
             },
             saveUninitialized: false,
             secret: process.env.SESSION_SECRET,
