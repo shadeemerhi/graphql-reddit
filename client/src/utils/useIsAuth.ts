@@ -3,13 +3,13 @@ import { useRouter } from "next/router";
 import { useCreatePostMutation, useMeQuery } from "../generated/graphql";
 
 export const useIsAuth = () => {
-      const router = useRouter();
-      const [{ data, fetching }] = useMeQuery();
+    const router = useRouter();
+    const { data, loading } = useMeQuery();
 
-      // Redirect the user if not logged in
-      useEffect(() => {
-          if (!fetching && !data?.me) {
-              router.replace("/login?next=" + router.pathname);
-          }
-      }, [fetching, data]);
-}
+    // Redirect the user if not logged in
+    useEffect(() => {
+        if (!loading && !data?.me) {
+            router.replace("/login?next=" + router.pathname);
+        }
+    }, [loading, data]);
+};

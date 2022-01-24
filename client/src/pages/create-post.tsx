@@ -12,16 +12,14 @@ import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import InputField from "../components/InputField";
 import Layout from "../components/Layout";
-import { useCreatePostMutation, useMeQuery } from "../generated/graphql";
-import { createUrqlClient } from "../utils/createUrqlClient";
+import { useCreatePostMutation } from "../generated/graphql";
 import { useIsAuth } from "../utils/useIsAuth";
 
 const CreatePost: React.FC<{}> = () => {
     const router = useRouter();
     useIsAuth();
-    const [{ data, fetching }] = useMeQuery();
-    const [{ error }, createPost] = useCreatePostMutation();
-  
+    const [createPost, { error }] = useCreatePostMutation();
+
     return (
         <Layout variant="small">
             {error && (
@@ -38,10 +36,12 @@ const CreatePost: React.FC<{}> = () => {
                 onSubmit={async (values, { setErrors }) => {
                     console.log(values);
                     // Could maybe do some better error handling here
-                    const { error } = await createPost({ input: values });
+                    const { errors } = await createPost({
+                        variables: { input: values },
+                    });
 
                     // Global error handler will handle any errors here
-                    if (!error) {
+                    if (!errors) {
                         router.push("/");
                     }
                 }}
@@ -77,4 +77,4 @@ const CreatePost: React.FC<{}> = () => {
     );
 };
 
-export default withUrqlClient(createUrqlClient)(CreatePost);
+export default CreatePost;

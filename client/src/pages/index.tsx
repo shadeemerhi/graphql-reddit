@@ -1,38 +1,33 @@
-import { withUrqlClient } from "next-urql";
-import Navbar from "../components/Navbar";
-import {
-    useDeletePostMutation,
-    useMeQuery,
-    usePostsQuery,
-} from "../generated/graphql";
-import { createUrqlClient } from "../utils/createUrqlClient";
-import NextLink from "next/link";
-import Layout from "../components/Layout";
+import { DeleteIcon } from "@chakra-ui/icons";
 import {
     Box,
     Button,
     Flex,
     Heading,
-    Icon,
     IconButton,
     Link,
     Stack,
     Text,
 } from "@chakra-ui/react";
-import { useState } from "react";
-import { DeleteIcon, TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
+import NextLink from "next/link";
+import Layout from "../components/Layout";
 import UpdootSection from "../components/UpdootSection";
-import Id from "./post/[id]";
+import {
+    PostsQuery,
+    useDeletePostMutation,
+    useMeQuery,
+    usePostsQuery,
+} from "../generated/graphql";
 
 const Index = () => {
-    const [variables, setVariables] = useState({ limit: 15, cursor: "" });
-    const [{ fetching, data, error }] = usePostsQuery({ variables });
-    const [{ data: meData }, _] = useMeQuery();
-    const [{ fetching: deleteFetch }, deletePost] = useDeletePostMutation();
+    const { loading, data, error, fetchMore, variables } = usePostsQuery({
+        variables: { limit: 15, cursor: "" },
+        notifyOnNetworkStatusChange: true,
+    });
+    const { data: meData } = useMeQuery();
+    const [deletePost, { loading: deleteFetch }] = useDeletePostMutation();
 
-    console.log("HERE IS ME", meData?.me?.username);
-
-    if (!fetching && !data) {
+    if (!loading && !data) {
         return <div>No posts available. Error: {error?.message}</div>; // Something went wrong
     }
     return (
@@ -46,7 +41,7 @@ const Index = () => {
                     </Button>
                 </NextLink>
             </Flex>
-            {fetching && !data && <p>LOADING....</p>}
+            {loading && !data && <p>LOADING....</p>}
             <br />
             <Stack spacing={8}>
                 {data
@@ -85,7 +80,9 @@ const Index = () => {
                                                   isLoading={deleteFetch}
                                                   onClick={async () =>
                                                       await deletePost({
-                                                          id: post.id,
+                                                          variables: {
+                                                              id: post.id,
+                                                          },
                                                       })
                                                   }
                                               />
@@ -107,12 +104,36 @@ const Index = () => {
             {data && data.posts.hasMore && (
                 <Flex justifyContent="center" alignItems="center" my={6}>
                     <Button
+                        isLoading={loading}
                         onClick={() => {
-                            setVariables({
-                                ...variables,
-                                cursor: data.posts.posts[
-                                    data.posts.posts.length - 1
-                                ].createdAt,
+                            fetchMore({
+                                variables: {
+                                    limit: variables?.limit,
+                                    cursor: data.posts.posts[
+                                        data.posts.posts.length - 1
+                                    ].createdAt,
+                                },
+                                updateQuery: (
+                                    previousValue,
+                                    { fetchMoreResult }
+                                ) => {
+                                    if (!fetchMoreResult) {
+                                        return previousValue;
+                                    }
+
+                                    return {
+                                        __typename: "Query",
+                                        posts: {
+                                            __typename: "PaginatedPosts",
+                                            hasMore:
+                                                fetchMoreResult.posts.hasMore,
+                                            posts: [
+                                                ...previousValue.posts.posts,
+                                                ...fetchMoreResult.posts.posts,
+                                            ],
+                                        },
+                                    };
+                                },
                             });
                         }}
                         color="white"
@@ -126,4 +147,4 @@ const Index = () => {
     );
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(Index);
+export default Index;

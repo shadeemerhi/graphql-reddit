@@ -1,3 +1,4 @@
+import { ApolloProvider, useApolloClient } from "@apollo/client";
 import { Box, Button, Flex, Heading, Link, Text } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
@@ -9,9 +10,10 @@ interface NavBarProps {}
 
 const Navbar: React.FC<NavBarProps> = () => {
     const router = useRouter();
-    const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
-    const [{ fetching, error, data }] = useMeQuery({
-        pause: isServer(), // pause rendering until ssr is complete
+    const apollo = useApolloClient();
+    const [logout, { loading: logoutFetching }] = useLogoutMutation();
+    const { loading, error, data } = useMeQuery({
+        skip: isServer(), // pause rendering until ssr is complete
         /**
          * Since now we are doing SSR cookie forwarding, we don't *need* to pause rendering if on server,
          * however we will keep it as this query doesn't *need* to be done on the server
@@ -21,7 +23,7 @@ const Navbar: React.FC<NavBarProps> = () => {
     let body = null;
 
     // data is loading
-    if (fetching) {
+    if (loading) {
     }
     // user not logged in
     else if (!data?.me) {
@@ -54,7 +56,7 @@ const Navbar: React.FC<NavBarProps> = () => {
                     isLoading={logoutFetching}
                     onClick={async () => {
                         await logout();
-                        router.reload();
+                        await apollo.resetStore();
                     }}
                 >
                     Logout

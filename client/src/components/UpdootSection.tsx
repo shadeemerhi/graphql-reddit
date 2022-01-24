@@ -16,7 +16,7 @@ const UpdootSection: React.FC<UpdootSectionProps> = ({ post }) => {
     const [loadingState, setLoadingState] = useState<
         "updoot-loading" | "downdoot-loading" | "not-loading"
     >("not-loading");
-    const [{ data, error }, vote] = useVoteMutation();
+    const [vote, { data, error }] = useVoteMutation();
 
     const onVote = async (state: typeof loadingState, value: number) => {
         // Prevent multiple votes in a single direction (up/down)
@@ -24,7 +24,7 @@ const UpdootSection: React.FC<UpdootSectionProps> = ({ post }) => {
             return;
         }
         setLoadingState(state);
-        await vote({ postId: post.id, value });
+        await vote({ variables: { postId: post.id, value } });
         setLoadingState("not-loading");
     };
     return (
@@ -36,20 +36,20 @@ const UpdootSection: React.FC<UpdootSectionProps> = ({ post }) => {
             mr={6}
         >
             <IconButton
-                color={post.voteStatus === 1 ? 'green.400' : 'gray'}
+                color={post.voteStatus === 1 ? "green.400" : "gray"}
                 aria-label="upvote"
                 icon={<TriangleUpIcon />}
                 _focus={{ outline: "none" }}
-                isLoading={loadingState === 'updoot-loading'}
+                isLoading={loadingState === "updoot-loading"}
                 onClick={() => onVote("updoot-loading", 1)}
-                />
+            />
             {post.points}
             <IconButton
-                color={post.voteStatus === -1 ? "red" : 'gray'}
+                color={post.voteStatus === -1 ? "red" : "gray"}
                 aria-label="downvote"
                 icon={<TriangleDownIcon />}
                 _focus={{ outline: "none" }}
-                isLoading={loadingState === 'downdoot-loading'}
+                isLoading={loadingState === "downdoot-loading"}
                 onClick={() => onVote("downdoot-loading", -1)}
             />
         </Box>

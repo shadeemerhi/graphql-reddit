@@ -1,13 +1,13 @@
 import { EditIcon } from "@chakra-ui/icons";
 import {
-  Alert,
-  AlertDescription,
-  AlertIcon,
-  Box,
-  Button,
-  CloseButton,
-  FormControl,
-  Heading
+    Alert,
+    AlertDescription,
+    AlertIcon,
+    Box,
+    Button,
+    CloseButton,
+    FormControl,
+    Heading,
 } from "@chakra-ui/react";
 import { Form, Formik } from "formik";
 import { withUrqlClient } from "next-urql";
@@ -16,11 +16,10 @@ import React, { useState } from "react";
 import InputField from "../../components/InputField";
 import Layout from "../../components/Layout";
 import {
-  useMeQuery,
-  usePostQuery,
-  useUpdatePostMutation
+    useMeQuery,
+    usePostQuery,
+    useUpdatePostMutation,
 } from "../../generated/graphql";
-import { createUrqlClient } from "../../utils/createUrqlClient";
 
 const Post: React.FC<{}> = () => {
     const router = useRouter();
@@ -30,17 +29,17 @@ const Post: React.FC<{}> = () => {
 
     const intId = typeof id === "string" ? parseInt(id) : -1;
 
-    const [{ data, fetching, error }, _] = usePostQuery({
-        pause: intId === -1, // bad URL parameter
+    const { data, loading, error } = usePostQuery({
+        skip: intId === -1, // bad URL parameter
         variables: {
             id: intId,
         },
     });
 
-    const [{ data: meData }] = useMeQuery();
-    const [{ error: updateError }, updatePost] = useUpdatePostMutation();
+    const { data: meData } = useMeQuery();
+    const [updatePost, { error: updateError }] = useUpdatePostMutation();
 
-    if (fetching) {
+    if (loading) {
         return <Layout>LOADING</Layout>;
     }
 
@@ -72,11 +71,16 @@ const Post: React.FC<{}> = () => {
                         }}
                         onSubmit={async (values) => {
                             const { title, text } = values;
-                            if (title !== data.post?.title || text !== data.post.text) {
-                              await updatePost({
-                                id: intId,
-                                ...values
-                              });
+                            if (
+                                title !== data.post?.title ||
+                                text !== data.post.text
+                            ) {
+                                await updatePost({
+                                    variables: {
+                                        id: intId,
+                                        ...values,
+                                    },
+                                });
                             }
                             setEditing(false);
                         }}
@@ -130,4 +134,4 @@ const Post: React.FC<{}> = () => {
         </Layout>
     );
 };
-export default withUrqlClient(createUrqlClient, { ssr: true })(Post);
+export default Post;
