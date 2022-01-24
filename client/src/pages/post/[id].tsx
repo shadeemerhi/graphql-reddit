@@ -1,13 +1,26 @@
-import { withUrqlClient } from "next-urql";
-import React, { useState } from "react";
-import { createUrqlClient } from "../../utils/createUrqlClient";
-import { useRouter } from "next/router";
-import { useMeQuery, usePostQuery, useUpdatePostMutation } from "../../generated/graphql";
-import Layout from "../../components/Layout";
-import { Alert, AlertDescription, AlertIcon, Box, Button, CloseButton, FormControl, Heading, Textarea } from "@chakra-ui/react";
-import { Field, Form, Formik, useField } from "formik";
 import { EditIcon } from "@chakra-ui/icons";
+import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  Box,
+  Button,
+  CloseButton,
+  FormControl,
+  Heading
+} from "@chakra-ui/react";
+import { Form, Formik } from "formik";
+import { withUrqlClient } from "next-urql";
+import { useRouter } from "next/router";
+import React, { useState } from "react";
 import InputField from "../../components/InputField";
+import Layout from "../../components/Layout";
+import {
+  useMeQuery,
+  usePostQuery,
+  useUpdatePostMutation
+} from "../../generated/graphql";
+import { createUrqlClient } from "../../utils/createUrqlClient";
 
 const Post: React.FC<{}> = () => {
     const router = useRouter();
@@ -45,7 +58,7 @@ const Post: React.FC<{}> = () => {
                 <Alert status="error">
                     <AlertIcon />
                     <AlertDescription>
-                       Error editing post. Please try again later.
+                        Error editing post. Please try again later.
                     </AlertDescription>
                     <CloseButton position="absolute" right="8px" top="8px" />
                 </Alert>
@@ -59,14 +72,13 @@ const Post: React.FC<{}> = () => {
                         }}
                         onSubmit={async (values) => {
                             const { title, text } = values;
-                            await updatePost({
-                                id: data.post!.id,
-                                title,
-                                text
-                            });
-
+                            if (title !== data.post?.title || text !== data.post.text) {
+                              await updatePost({
+                                id: intId,
+                                ...values
+                              });
+                            }
                             setEditing(false);
-
                         }}
                     >
                         {({ isSubmitting }) => (

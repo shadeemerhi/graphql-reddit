@@ -41,6 +41,7 @@ const InputField: React.FC<InputFieldProps> = ({
                     {...props}
                     id={field.name}
                     placeholder={props.placeholder}
+                    _hover={{ border: "1px solid #1DA1F2" }}
                 />
             )}
             {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
