@@ -21,7 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { DeleteIcon, TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
-import UpdootSection from "./UpdootSection";
+import UpdootSection from "../components/UpdootSection";
 import Id from "./post/[id]";
 
 const Index = () => {
