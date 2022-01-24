@@ -1,14 +1,19 @@
 import { withUrqlClient } from "next-urql";
-import React from "react";
+import React, { useState } from "react";
 import { createUrqlClient } from "../../utils/createUrqlClient";
 import { useRouter } from "next/router";
-import { usePostQuery } from "../../generated/graphql";
+import { useMeQuery, usePostQuery } from "../../generated/graphql";
 import Layout from "../../components/Layout";
-import { Box, Heading } from "@chakra-ui/react";
+import { Box, Button, FormControl, Heading, Textarea } from "@chakra-ui/react";
+import { Field, Form, Formik, useField } from "formik";
+import { EditIcon } from "@chakra-ui/icons";
+import InputField from "../../components/InputField";
 
 const Post: React.FC<{}> = () => {
     const router = useRouter();
     const { id } = router.query;
+
+    const [editing, setEditing] = useState(false);
 
     const intId = typeof id === "string" ? parseInt(id) : -1;
 
@@ -18,26 +23,82 @@ const Post: React.FC<{}> = () => {
             id: intId,
         },
     });
-    console.log("====================================");
-    console.log("here is the data", data, error, fetching);
-    console.log("====================================");
+
+    const [{ data: meData }] = useMeQuery();
 
     if (fetching) {
-      return <Layout>LOADING</Layout>
+        return <Layout>LOADING</Layout>;
     }
 
     if (!data?.post) {
-      return (
-        <Layout>
-          <Box>Could not find post</Box>
-        </Layout>
-      )
+        return (
+            <Layout>
+                <Box>Could not find post</Box>
+            </Layout>
+        );
     }
 
     return (
         <Layout>
-            <Heading mb={4}>{data?.post?.title}</Heading>
-            {data?.post?.text}
+            <Box>
+                {editing ? (
+                    <Formik
+                        initialValues={{
+                            title: data.post.title,
+                            text: data.post.text,
+                        }}
+                        onSubmit={async (values) => {
+                            const { title, text } = values;
+                            console.log("HERE ARE VALS", title, text);
+                            setEditing(false);
+                        }}
+                    >
+                        {({ isSubmitting }) => (
+                            <Form>
+                                <FormControl>
+                                    <InputField name="title" label="Title" />
+                                    <br />
+                                    <InputField
+                                        name="text"
+                                        textarea
+                                        label="Body"
+                                    />
+                                    <Box display="flex" justifyContent="center">
+                                        <Button
+                                            type="submit"
+                                            colorScheme="teal"
+                                            color="white"
+                                            isLoading={isSubmitting}
+                                            mt={4}
+                                        >
+                                            Save
+                                        </Button>
+                                    </Box>
+                                </FormControl>
+                            </Form>
+                        )}
+                    </Formik>
+                ) : (
+                    <>
+                        <Box
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            mb={4}
+                        >
+                            <Heading>{data?.post?.title}</Heading>
+                            {meData?.me?.id === data.post.creatorId && (
+                                <EditIcon
+                                    fontSize={20}
+                                    cursor="pointer"
+                                    onClick={() => setEditing(true)}
+                                />
+                            )}
+                        </Box>
+                        {data.post.text}
+                    </>
+                )}
+            </Box>
         </Layout>
     );
 };

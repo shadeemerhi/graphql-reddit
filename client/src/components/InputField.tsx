@@ -8,8 +8,10 @@ import {
 import { Form, useField } from "formik";
 import React from "react";
 
-type InputFieldProps = React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> & {
-    label: string;
+type InputFieldProps = React.InputHTMLAttributes<
+    HTMLInputElement | HTMLTextAreaElement
+> & {
+    label?: string;
     name: string;
     textarea?: boolean;
 };
@@ -24,13 +26,14 @@ const InputField: React.FC<InputFieldProps> = ({
 
     return (
         <FormControl isInvalid={!!error}>
-            <FormLabel htmlFor={field.name}>{label}</FormLabel>
+            {label && <FormLabel htmlFor={field.name}>{label}</FormLabel>}
             {textarea ? (
                 <Textarea
                     {...field}
                     {...props}
                     id={field.name}
                     placeholder={props.placeholder}
+                    _hover={{ border: "1px solid #1DA1F2" }}
                 />
             ) : (
                 <Input

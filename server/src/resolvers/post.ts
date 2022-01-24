@@ -177,20 +177,31 @@ export class PostResolver {
     }
 
     @Mutation(() => Post, { nullable: true })
+    @UseMiddleware(isAuth)
     async updatePost(
-        @Arg("id") id: number,
-        @Arg("title", () => String, { nullable: true }) title: string
+        @Arg("id", () => Int) id: number,
+        @Arg("title", () => String) title: string,
+        @Arg("text", () => String) text: string,
+        @Ctx() { req }: MyContext
     ): Promise<Post | null> {
         const post = await Post.findOne({ where: { id } });
         if (!post) {
             return null;
         }
 
-        if (typeof title !== undefined) {
-            await Post.update({ id }, { title });
+        if (post.creatorId !== req.session.userId) {
+            throw new Error("Not Authorized");
         }
 
-        return post;
+        const result = await getConnection()
+            .createQueryBuilder()
+            .update(Post)
+            .set({ title, text })
+            .where("id = :id", { id })
+            .returning("*")
+            .execute();
+
+        return result.raw[0];
     }
 
     @Mutation(() => Boolean)
@@ -209,7 +220,7 @@ export class PostResolver {
         if (post.creatorId !== req.session.userId) {
             throw new Error("Not Authorized");
         }
-        
+
         await Post.delete({ id });
         return true;
     }
