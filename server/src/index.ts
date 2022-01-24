@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import 'dotenv-safe/config';
 import { ApolloServer } from "apollo-server-express";
 import connectRedis from "connect-redis";
 import cors from "cors";
@@ -26,13 +27,11 @@ declare module "express-session" {
     }
 }
 
-//rerun
 const main = async () => {
     try {
         const conn = await createConnection({
             type: "postgres",
-            database: "graphreddit2",
-            username: "shadeemerhi",
+            url: process.env.DATABASE_URL,
             logging: true,
             synchronize: true, // don't need to run migrations
             migrations: [path.join(__dirname, "./migrations/*")],
@@ -46,10 +45,10 @@ const main = async () => {
     const app = express();
 
     const RedisStore = connectRedis(session);
-    const redis = new Redis();
+    const redis = new Redis(process.env.REDIS_URL);
     app.use(
         cors({
-            origin: "http://localhost:3000",
+            origin: process.env.CORS_ORIGIN,
             credentials: true,
         })
     );
@@ -63,9 +62,10 @@ const main = async () => {
                 httpOnly: true,
                 sameSite: "lax", // csrf
                 secure: __prod__, // cookie only works in https (only in production)
+                domain: __prod__ ? '.first-project.com' : undefined
             },
             saveUninitialized: false,
-            secret: "someRandomHiddenString",
+            secret: process.env.SESSION_SECRET,
             resave: true,
         })
     );
@@ -91,7 +91,7 @@ const main = async () => {
         cors: false, // setting cors globally using 'cors' middlewear rather than with Apollo here
     });
 
-    app.listen(4000, () => {
+    app.listen(parseInt(process.env.PORT), () => {
         console.log("Server Started on PORT 4000");
     });
 };

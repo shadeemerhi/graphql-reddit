@@ -135,6 +135,12 @@ export class UserResolver {
             "ex",
             1000 * 60 * 60 * 24 * 3
         ); // 3 days
+
+        /**
+         * If we want this to work in production, we'd have to put the domain here
+         * and actually set up a real email provider
+         * Going to ignore this in production for now
+         */
         await sendEmail(
             email,
             `<a href="http:localhost:3000/change-password/${token}">Reset Password</a>`
