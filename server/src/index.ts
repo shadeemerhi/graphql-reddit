@@ -50,7 +50,7 @@ const main = async () => {
      * telling express that we have nginx sitting in front of api
      * allows for cookies and sessions to work
      */
-    app.set("proxy", 1);
+    app.set("trust proxy", 1);
     app.use(
         cors({
             origin: process.env.CORS_ORIGIN,
