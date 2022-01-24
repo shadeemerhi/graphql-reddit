@@ -2,9 +2,9 @@ import { withUrqlClient } from "next-urql";
 import React, { useState } from "react";
 import { createUrqlClient } from "../../utils/createUrqlClient";
 import { useRouter } from "next/router";
-import { useMeQuery, usePostQuery } from "../../generated/graphql";
+import { useMeQuery, usePostQuery, useUpdatePostMutation } from "../../generated/graphql";
 import Layout from "../../components/Layout";
-import { Box, Button, FormControl, Heading, Textarea } from "@chakra-ui/react";
+import { Alert, AlertDescription, AlertIcon, Box, Button, CloseButton, FormControl, Heading, Textarea } from "@chakra-ui/react";
 import { Field, Form, Formik, useField } from "formik";
 import { EditIcon } from "@chakra-ui/icons";
 import InputField from "../../components/InputField";
@@ -25,6 +25,7 @@ const Post: React.FC<{}> = () => {
     });
 
     const [{ data: meData }] = useMeQuery();
+    const [{ error: updateError }, updatePost] = useUpdatePostMutation();
 
     if (fetching) {
         return <Layout>LOADING</Layout>;
@@ -40,6 +41,15 @@ const Post: React.FC<{}> = () => {
 
     return (
         <Layout>
+            {updateError && (
+                <Alert status="error">
+                    <AlertIcon />
+                    <AlertDescription>
+                       Error editing post. Please try again later.
+                    </AlertDescription>
+                    <CloseButton position="absolute" right="8px" top="8px" />
+                </Alert>
+            )}
             <Box>
                 {editing ? (
                     <Formik
@@ -49,8 +59,14 @@ const Post: React.FC<{}> = () => {
                         }}
                         onSubmit={async (values) => {
                             const { title, text } = values;
-                            console.log("HERE ARE VALS", title, text);
+                            await updatePost({
+                                id: data.post!.id,
+                                title,
+                                text
+                            });
+
                             setEditing(false);
+
                         }}
                     >
                         {({ isSubmitting }) => (
