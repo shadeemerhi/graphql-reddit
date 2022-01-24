@@ -33,7 +33,7 @@ const Index = () => {
     console.log("HERE IS ME", meData?.me?.username);
 
     if (!fetching && !data) {
-        return <div>No posts available</div>; // Something went wrong
+        return <div>No posts available. Error: {error?.message}</div>; // Something went wrong
     }
     return (
         <Layout>

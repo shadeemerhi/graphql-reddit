@@ -17,6 +17,7 @@ import { MyContext } from "src/types";
 import { isAuth } from "../middleware/isAuth";
 import { getConnection, QueryBuilder } from "typeorm";
 import { Updoot } from "../entities/Updoot";
+import { User } from "../entities/User";
 
 @InputType()
 class PostInput {
@@ -38,8 +39,35 @@ class PaginatedPosts {
 @Resolver(Post)
 export class PostResolver {
     @FieldResolver(() => String)
-    textSnippet(@Root() root: Post) {
-        return root.text.slice(0, 50);
+    textSnippet(@Root() post: Post) {
+        return post.text.slice(0, 50);
+    }
+
+    /**
+     * Will fetch the creator no matter where post is coming from
+     * i.e. a sql request will be made to find the creator for the fetched post
+     * which means we can remove the json_build_object and the join in 'posts' and 'post'
+     */
+    @FieldResolver(() => User)
+    creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+        return userLoader.load(post.creatorId); // batches ids into a single function call
+    }
+
+    @FieldResolver(() => Int, { nullable: true })
+    async voteStatus(
+        @Root() post: Post,
+        @Ctx() { req, updootLoader }: MyContext
+    ) {
+        // do not have a vote status if not logged in
+        if (!req.session.userId) {
+            return null;
+        }
+        const updoot = await updootLoader.load({
+            postId: post.id,
+            userId: req.session.userId,
+        });
+
+        return updoot ? updoot.value : null;
     }
 
     @Mutation(() => Boolean)
@@ -107,46 +135,22 @@ export class PostResolver {
     async posts(
         @Arg("limit", () => Int) limit: number,
         @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-        @Ctx() { req }: MyContext
+        @Ctx() {}: MyContext
     ): Promise<PaginatedPosts> {
         // 20 -> 21
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
 
         const replacements: any[] = [realLimitPlusOne];
-
-        if (req.session.userId) {
-            replacements.push(req.session.userId);
-        }
-
-        let cursorIndex = 2;
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
-            cursorIndex = replacements.length; // Index of cursor changes depending on logged in state
         }
 
         const posts = await getConnection().query(
             `
-        select p.*,
-        json_build_object(
-            'id', u.id,
-            'username', u.username,
-            'email', u.email
-        ) creator,
-        ${
-            /**
-             * If the current user has voted on the post, set the voteStatus to
-             * be the value of that vote, to prevent multiple votes in one direction (up/down)
-             */
-            // Session not passed in SSR
-            req.session.userId
-                ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
-                : 'null as "voteStatus"'
-        }
+        select p.*
         from post p
-        inner join public.user u on u.id = p."creatorId"
-        ${cursor ? `where p."createdAt" < $${cursorIndex}` : ``}
-
+        ${cursor ? `where p."createdAt" < $2` : ``}
         order by p."createdAt" DESC
         limit $1
         `,
@@ -161,7 +165,13 @@ export class PostResolver {
 
     @Query(() => Post, { nullable: true })
     async post(@Arg("id", () => Int) id: number): Promise<Post | undefined> {
-        return Post.findOne(id, { relations: ["creator"] }); // performs join for us
+        // return Post.findOne(id, { relations: ["creator"] }); // performs join for us
+        /**
+         * added field resolver to get creator, which will be done together with below
+         * if we didn't have the field resolver, we could use above to get the creator
+         * (two ways of doing the same thing)
+         */
+        return Post.findOne(id);
     }
 
     @Mutation(() => Post)
