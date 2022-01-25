@@ -46,10 +46,10 @@ const Index = () => {
             <br />
             <Stack spacing={8}>
                 {data
-                    ? data.posts.posts.map((post) =>
+                    ? data.posts.posts.map((post, index) =>
                           !post ? null : (
                               <Box
-                                  key={post.id as number}
+                                  key={index}
                                   display="flex"
                                   p={5}
                                   shadow="md"

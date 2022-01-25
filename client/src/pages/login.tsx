@@ -13,7 +13,6 @@ interface LoginProps {}
 
 const Login: React.FC<LoginProps> = ({}) => {
     const router = useRouter();
-    const apollo = useApolloClient();
     const [login] = useLoginMutation();
 
     return (
@@ -21,21 +20,19 @@ const Login: React.FC<LoginProps> = ({}) => {
             <Formik
                 initialValues={{ usernameOrEmail: "", password: "" }}
                 onSubmit={async (values, { setErrors }) => {
-                    console.log(values);
                     const response = await login({
                         variables: values,
                         update: (cache, { data }) => {
                             cache.writeQuery<MeQuery>({
                                 query: MeDocument,
                                 data: {
+                                    __typename: "Query",
                                     me: data?.login.user,
                                 },
                             });
+                            cache.evict({ fieldName: "posts" });
                         },
                     });
-                    console.log("====================================");
-                    console.log("HERE IS RESPOSNE", response);
-                    console.log("====================================");
                     if (response.data?.login.errors) {
                         setErrors(toErrorMap(response.data.login.errors));
                     } else if (response.data?.login.user) {
