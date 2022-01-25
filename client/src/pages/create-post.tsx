@@ -39,6 +39,9 @@ const CreatePost: React.FC<{}> = () => {
                     // Could maybe do some better error handling here
                     const { errors } = await createPost({
                         variables: { input: values },
+                        update: (cache) => {
+                            cache.evict({ fieldName: "posts" });
+                        },
                     });
 
                     // Global error handler will handle any errors here

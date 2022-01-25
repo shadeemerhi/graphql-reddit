@@ -1,10 +1,13 @@
+import { ApolloCache, gql } from "@apollo/client";
 import { TriangleUpIcon, TriangleDownIcon } from "@chakra-ui/icons";
 import { Box, IconButton } from "@chakra-ui/react";
 import React, { useState } from "react";
 import {
+    Post,
     PostSnippetFragment,
     PostsQuery,
     useVoteMutation,
+    VoteMutation,
 } from "../generated/graphql";
 
 type UpdootSectionProps = {
@@ -12,11 +15,50 @@ type UpdootSectionProps = {
     // post: PostsQuery['posts']['posts'][0]; // Another way of getting the post type
 };
 
+const updateAfterVote = (
+    postId: number,
+    value: number,
+    cache: ApolloCache<VoteMutation>
+) => {
+    const data = cache.readFragment<{
+        id: number;
+        points: number;
+        voteStatus: number | null;
+    }>({
+        id: "Post:" + postId,
+        fragment: gql`
+            fragment _ on Post {
+                id
+                points
+                voteStatus
+            }
+        `,
+    });
+    if (data) {
+        if (data.voteStatus === value) return;
+        const newPoints =
+            (data.points as number) + (!data.voteStatus ? 1 : 2) * value; // If user hasn't voted before (i.e. voteStatus is null), only add/sub 1
+        cache.writeFragment({
+            id: 'Post:' + postId,
+            fragment: gql`
+                fragment _ on Post {
+                    points
+                    voteStatus
+                }
+            `,
+            data: {
+                points: newPoints,
+                voteStatus: value,
+            },
+        });
+    }
+};
+
 const UpdootSection: React.FC<UpdootSectionProps> = ({ post }) => {
     const [loadingState, setLoadingState] = useState<
         "updoot-loading" | "downdoot-loading" | "not-loading"
     >("not-loading");
-    const [vote, { data, error }] = useVoteMutation();
+    const [vote] = useVoteMutation();
 
     const onVote = async (state: typeof loadingState, value: number) => {
         // Prevent multiple votes in a single direction (up/down)
@@ -24,7 +66,10 @@ const UpdootSection: React.FC<UpdootSectionProps> = ({ post }) => {
             return;
         }
         setLoadingState(state);
-        await vote({ variables: { postId: post.id, value } });
+        await vote({
+            variables: { postId: post.id, value },
+            update: (cache) => updateAfterVote(post.id, value, cache),
+        });
         setLoadingState("not-loading");
     };
     return (

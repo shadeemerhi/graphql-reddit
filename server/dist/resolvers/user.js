@@ -113,6 +113,7 @@ let UserResolver = class UserResolver {
         if (!req.session.userId) {
             return null;
         }
+        console.log('HERE IS SESSION', req.session.userId);
         return User_1.User.findOne(req.session.userId);
     }
     async register(options, { req }) {

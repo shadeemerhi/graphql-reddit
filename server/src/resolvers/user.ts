@@ -161,6 +161,9 @@ export class UserResolver {
             return null;
         }
 
+        console.log('HERE IS SESSION', req.session.userId);
+        
+
         // User is logged in
         return User.findOne(req.session.userId);
     }

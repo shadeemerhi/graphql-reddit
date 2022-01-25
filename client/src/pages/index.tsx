@@ -9,7 +9,7 @@ import {
     Stack,
     Text,
 } from "@chakra-ui/react";
-import { withApollo } from '../utils/withApollo';
+import { withApollo } from "../utils/withApollo";
 import NextLink from "next/link";
 import Layout from "../components/Layout";
 import UpdootSection from "../components/UpdootSection";
@@ -84,6 +84,13 @@ const Index = () => {
                                                       await deletePost({
                                                           variables: {
                                                               id: post.id,
+                                                          },
+                                                          update: (cache) => {
+                                                              cache.evict({
+                                                                  id:
+                                                                      "Post:" +
+                                                                      post.id,
+                                                              });
                                                           },
                                                       })
                                                   }
