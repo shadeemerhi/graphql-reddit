@@ -20,6 +20,7 @@ import {
     usePostQuery,
     useUpdatePostMutation,
 } from "../../generated/graphql";
+import { withApollo } from "../../utils/withApollo";
 
 const Post: React.FC<{}> = () => {
     const router = useRouter();
@@ -134,4 +135,4 @@ const Post: React.FC<{}> = () => {
         </Layout>
     );
 };
-export default Post;
+export default withApollo({ ssr: true })(Post);

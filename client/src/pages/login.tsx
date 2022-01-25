@@ -7,6 +7,7 @@ import InputField from "../components/InputField";
 import Layout from "../components/Layout";
 import { useLoginMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
+import { withApollo } from "../utils/withApollo";
 
 
 interface LoginProps {}
@@ -74,4 +75,4 @@ const Login: React.FC<LoginProps> = ({}) => {
     );
 };
 
-export default Login;
+export default withApollo({ ssr: false })(Login);
