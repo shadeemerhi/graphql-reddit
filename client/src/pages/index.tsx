@@ -49,6 +49,7 @@ const Index = () => {
                     ? data.posts.posts.map((post) =>
                           !post ? null : (
                               <Box
+                                  key={post.id as number}
                                   display="flex"
                                   p={5}
                                   shadow="md"
