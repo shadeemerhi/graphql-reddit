@@ -9,6 +9,7 @@ import {
     Stack,
     Text,
 } from "@chakra-ui/react";
+import { withApollo } from '../utils/withApollo';
 import NextLink from "next/link";
 import Layout from "../components/Layout";
 import UpdootSection from "../components/UpdootSection";
@@ -113,27 +114,6 @@ const Index = () => {
                                         data.posts.posts.length - 1
                                     ].createdAt,
                                 },
-                                updateQuery: (
-                                    previousValue,
-                                    { fetchMoreResult }
-                                ) => {
-                                    if (!fetchMoreResult) {
-                                        return previousValue;
-                                    }
-
-                                    return {
-                                        __typename: "Query",
-                                        posts: {
-                                            __typename: "PaginatedPosts",
-                                            hasMore:
-                                                fetchMoreResult.posts.hasMore,
-                                            posts: [
-                                                ...previousValue.posts.posts,
-                                                ...fetchMoreResult.posts.posts,
-                                            ],
-                                        },
-                                    };
-                                },
                             });
                         }}
                         color="white"
@@ -147,4 +127,4 @@ const Index = () => {
     );
 };
 
-export default Index;
+export default withApollo({ ssr: true })(Index);
