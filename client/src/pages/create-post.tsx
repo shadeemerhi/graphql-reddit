@@ -35,7 +35,6 @@ const CreatePost: React.FC<{}> = () => {
             <Formik
                 initialValues={{ title: "", text: "" }}
                 onSubmit={async (values, { setErrors }) => {
-                    console.log(values);
                     // Could maybe do some better error handling here
                     const { errors } = await createPost({
                         variables: { input: values },

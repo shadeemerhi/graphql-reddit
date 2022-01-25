@@ -1,9 +1,3 @@
 mutation CreatePost($input: PostInput!) {
-    createPost(input: $input) {
-        title
-        text
-        id
-        createdAt
-        updatedAt
-    }
+    createPost(input: $input)
 }

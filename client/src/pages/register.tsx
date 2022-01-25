@@ -3,7 +3,7 @@ import { Formik, Form } from "formik";
 import InputField from "../components/InputField";
 import Wrapper from "../components/Wrapper";
 
-import { useRegisterMutation } from "../generated/graphql";
+import { MeDocument, MeQuery, useRegisterMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { useRouter } from "next/router";
 import { withApollo } from "../utils/withApollo";
@@ -22,6 +22,15 @@ const Register: React.FC<RegisterProps> = ({}) => {
                     console.log(values);
                     const response = await register({
                         variables: { options: values },
+                        update: (cache, { data }) => {
+                            cache.writeQuery<MeQuery>({
+                                query: MeDocument,
+                                data: {
+                                    __typename: 'Query',
+                                    me: data?.register.user,
+                                },
+                            });
+                        },
                     });
                     if (response.data?.register.errors) {
                         setErrors(toErrorMap(response.data.register.errors));

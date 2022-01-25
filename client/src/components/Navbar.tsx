@@ -19,9 +19,6 @@ const Navbar: React.FC<NavBarProps> = () => {
          * however we will keep it as this query doesn't *need* to be done on the server
          */
     });
-    console.log('====================================');
-    console.log('HERE IS DATA', data?.me);
-    console.log('====================================');
 
     let body = null;
 

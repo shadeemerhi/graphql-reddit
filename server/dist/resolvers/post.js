@@ -120,7 +120,8 @@ let PostResolver = class PostResolver {
         return Post_1.Post.findOne(id);
     }
     async createPost(input, { req }) {
-        return Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
+        await Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
+        return true;
     }
     async updatePost(id, title, text, { req }) {
         const post = await Post_1.Post.findOne({ where: { id } });
@@ -201,7 +202,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "post", null);
 __decorate([
-    (0, type_graphql_1.Mutation)(() => Post_1.Post),
+    (0, type_graphql_1.Mutation)(() => Boolean),
     (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
     __param(0, (0, type_graphql_1.Arg)("input")),
     __param(1, (0, type_graphql_1.Ctx)()),

@@ -5,10 +5,9 @@ import NextLink from "next/link";
 import { useRouter } from "next/router";
 import InputField from "../components/InputField";
 import Layout from "../components/Layout";
-import { useLoginMutation } from "../generated/graphql";
+import { MeDocument, MeQuery, useLoginMutation } from "../generated/graphql";
 import { toErrorMap } from "../utils/toErrorMap";
 import { withApollo } from "../utils/withApollo";
-
 
 interface LoginProps {}
 
@@ -23,10 +22,20 @@ const Login: React.FC<LoginProps> = ({}) => {
                 initialValues={{ usernameOrEmail: "", password: "" }}
                 onSubmit={async (values, { setErrors }) => {
                     console.log(values);
-                    const response = await login({ variables: values });
-                    console.log('====================================');
-                    console.log('HERE IS RESPOSNE', response);
-                    console.log('====================================');
+                    const response = await login({
+                        variables: values,
+                        update: (cache, { data }) => {
+                            cache.writeQuery<MeQuery>({
+                                query: MeDocument,
+                                data: {
+                                    me: data?.login.user,
+                                },
+                            });
+                        },
+                    });
+                    console.log("====================================");
+                    console.log("HERE IS RESPOSNE", response);
+                    console.log("====================================");
                     if (response.data?.login.errors) {
                         setErrors(toErrorMap(response.data.login.errors));
                     } else if (response.data?.login.user) {
